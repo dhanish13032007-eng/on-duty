@@ -58,6 +58,7 @@ def apply():
 
     # ── Block: under penalty ───────────────────────────────────────────────
     if current_user.is_under_penalty:
+        if _is_ajax(): return jsonify({'ok': False, 'message': 'You are under penalty and cannot apply.'})
         flash('You are under penalty and cannot apply for OD at this time.', 'error')
         return redirect(url_for('student.dashboard'))
 
@@ -69,11 +70,9 @@ def apply():
         verification_status='Pending Upload'
     ).first()
     if pending_cert:
-        flash(
-            f'You must upload your certificate for "{pending_cert.event_name}" '
-            f'before applying for a new OD.',
-            'error'
-        )
+        msg = f'You must upload your certificate for "{pending_cert.event_name}" before applying for a new OD.'
+        if _is_ajax(): return jsonify({'ok': False, 'message': msg})
+        flash(msg, 'error')
         return redirect(url_for('student.dashboard'))
 
     if request.method == 'POST':
@@ -86,12 +85,14 @@ def apply():
 
         # Basic field validation
         if not all([event_name, college_name, od_date_str, od_day]):
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'Please fill in all required fields.'})
             flash('Please fill in all required fields.', 'error')
             return render_template('student/apply.html')
 
         try:
             od_date = datetime.strptime(od_date_str, '%Y-%m-%d').date()
         except ValueError:
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'Invalid date format.'})
             flash('Invalid date format. Please use the date picker.', 'error')
             return render_template('student/apply.html')
 
@@ -100,6 +101,7 @@ def apply():
             if num_days < 1 or num_days > 30:
                 raise ValueError
         except ValueError:
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'Number of days must be between 1 and 30.'})
             flash('Number of days must be between 1 and 30.', 'error')
             return render_template('student/apply.html')
 
@@ -110,11 +112,9 @@ def apply():
             db.extract('year',  ODRequest.od_date) == od_date.year,
         ).first()
         if existing_this_month:
-            flash(
-                f'You already have an OD application for '
-                f'{od_date.strftime("%B %Y")}. Only one OD per month is allowed.',
-                'error'
-            )
+            msg = f'You already have an OD application for {od_date.strftime("%B %Y")}. Only one OD per month is allowed.'
+            if _is_ajax(): return jsonify({'ok': False, 'message': msg})
+            flash(msg, 'error')
             return render_template('student/apply.html')
 
         # ── File uploads ───────────────────────────────────────────────────
@@ -123,21 +123,25 @@ def apply():
 
         # Validate approval letter (required)
         if not approval_letter or not approval_letter.filename:
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'Approval letter is required.'})
             flash('Approval letter is required.', 'error')
             return render_template('student/apply.html')
 
         valid, err = validate_upload(approval_letter)
         if not valid:
+            if _is_ajax(): return jsonify({'ok': False, 'message': f'Approval letter: {err}'})
             flash(f'Approval letter: {err}', 'error')
             return render_template('student/apply.html')
 
         # Validate brochure (required)
         if not brochure or not brochure.filename:
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'Event brochure is required.'})
             flash('Event brochure is required.', 'error')
             return render_template('student/apply.html')
 
         valid, err = validate_upload(brochure)
         if not valid:
+            if _is_ajax(): return jsonify({'ok': False, 'message': f'Event brochure: {err}'})
             flash(f'Event brochure: {err}', 'error')
             return render_template('student/apply.html')
 
@@ -168,16 +172,15 @@ def apply():
             except Exception as mail_err:
                 current_app.logger.warning(f'Email notification failed: {mail_err}')
 
-            flash(
-                'OD application submitted successfully! '
-                'HOD and Admin have been notified.',
-                'success'
-            )
+            msg = 'OD application submitted successfully! HOD and Admin have been notified.'
+            if _is_ajax(): return jsonify({'ok': True, 'message': msg, 'redirect': url_for('student.dashboard')})
+            flash(msg, 'success')
             return redirect(url_for('student.dashboard'))
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f'OD submission error: {e}')
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'An error occurred while submitting your application. Please try again.'})
             flash('An error occurred while submitting your application. Please try again.', 'error')
             return render_template('student/apply.html')
 
@@ -199,26 +202,37 @@ def upload_certificate(od_id):
         abort(403)
 
     if od.final_status != 'Approved':
-        flash('You can only upload a certificate for an approved OD.', 'error')
+        msg = 'You can only upload a certificate for an approved OD.'
+        if _is_ajax(): return jsonify({'ok': False, 'message': msg})
+        flash(msg, 'error')
         return redirect(url_for('student.dashboard'))
 
     if od.verification_status == 'Verified':
-        flash('This certificate has already been verified.', 'info')
+        msg = 'This certificate has already been verified.'
+        if _is_ajax(): return jsonify({'ok': False, 'message': msg})
+        flash(msg, 'info')
         return redirect(url_for('student.dashboard'))
 
     if request.method == 'POST':
         certificate = request.files.get('certificate')
         achievement  = request.form.get('achievement', 'Participant')
 
+        if not certificate or not certificate.filename:
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'Event certificate is required.'})
+            flash('Event certificate is required.', 'error')
+            return render_template('student/upload_certificate.html', od=od)
+
         # Validate upload
         valid, err = validate_upload(certificate)
         if not valid:
+            if _is_ajax(): return jsonify({'ok': False, 'message': f'Certificate upload failed: {err}'})
             flash(f'Certificate upload failed: {err}', 'error')
             return render_template('student/upload_certificate.html', od=od)
 
         try:
             cert_path = save_upload(certificate, folder='certificates')
             if not cert_path:
+                if _is_ajax(): return jsonify({'ok': False, 'message': 'File upload failed. Please try again.'})
                 flash('File upload failed. Please try again.', 'error')
                 return render_template('student/upload_certificate.html', od=od)
 
@@ -246,12 +260,15 @@ def upload_certificate(od_id):
                 db.session.add(leaderboard)
 
             db.session.commit()
-            flash('Certificate uploaded! Your HOD will verify it shortly.', 'success')
+            msg = 'Certificate uploaded! Your HOD will verify it shortly.'
+            if _is_ajax(): return jsonify({'ok': True, 'message': msg, 'redirect': url_for('student.dashboard')})
+            flash(msg, 'success')
             return redirect(url_for('student.dashboard'))
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f'Certificate upload error: {e}')
+            if _is_ajax(): return jsonify({'ok': False, 'message': 'An error occurred while uploading. Please try again.'})
             flash('An error occurred while uploading. Please try again.', 'error')
 
     return render_template('student/upload_certificate.html', od=od)
@@ -270,3 +287,10 @@ def serve_file(filename):
         return redirect(filename)
 
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+def _is_ajax():
+    """Detect AJAX requests."""
+    return (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('Accept', '')
+    )
