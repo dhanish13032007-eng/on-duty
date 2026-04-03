@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Load variables from .env file
+
 from flask import Flask
 from config import Config
 from models import db, User
