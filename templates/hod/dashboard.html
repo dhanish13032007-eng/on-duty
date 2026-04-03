@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}HOD Dashboard — Smart OD{% endblock %}
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header animate-fade-up">
+    <div class="page-header-left">
+        <h1>HOD Dashboard</h1>
+        <p>Department: <strong>{{ current_user.department or 'All Departments' }}</strong></p>
+    </div>
+    <a href="{{ url_for('admin.analytics') }}" class="btn btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        View Analytics
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid animate-stagger animate-fade-up">
+    <div class="stat-card primary">
+        <div class="stat-icon primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Total Requests</p>
+            <h3>{{ ods|length }}</h3>
+            <small>All OD requests</small>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon warning">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Awaiting My Action</p>
+            <h3>{{ ods|selectattr('hod_status','equalto','Pending')|list|length }}</h3>
+            <small>Needs your review</small>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon success">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Approved by Me</p>
+            <h3>{{ ods|selectattr('hod_status','equalto','Approved')|list|length }}</h3>
+            <small>HOD approved</small>
+        </div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon info">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Pending Verification</p>
+            <h3>{{ ods|selectattr('verification_status','equalto','Pending Verification')|list|length }}</h3>
+            <small>Certificates to verify</small>
+        </div>
+    </div>
+</div>
+
+<!-- OD Requests Table -->
+<div class="card animate-fade-up">
+    <div class="card-header">
+        <div>
+            <h3>Department OD Requests</h3>
+            <p>Review and action each request below</p>
+        </div>
+    </div>
+
+    {% if ods %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Event / College</th>
+                    <th>OD Date</th>
+                    <th>Days</th>
+                    <th>Documents</th>
+                    <th>Status</th>
+                    <th>Certificate</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for od in ods %}
+                <tr>
+                    <td>
+                        <div class="td-user">
+                            <strong>{{ od.student.name }}</strong>
+                            <small>{{ od.student.username }} | Sec {{ od.student.section or '—' }} | Yr {{ od.student.year or '—' }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-user">
+                            <strong>{{ od.event_name }}</strong>
+                            <small>{{ od.college_name }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        {{ od.od_date.strftime('%d %b %Y') }}<br>
+                        <small style="color:var(--text-3);">{{ od.od_day }}</small>
+                    </td>
+                    <td style="font-weight:700; color:var(--primary);">{{ od.number_of_days }}</td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:0.3rem;">
+                            {% if od.approval_letter_path %}
+                            <a href="{{ url_for('student.serve_file', filename=od.approval_letter_path) }}" target="_blank"
+                               style="font-size:0.775rem; color:var(--primary); display:flex; align-items:center; gap:0.3rem;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                Approval Letter
+                            </a>
+                            {% endif %}
+                            {% if od.brochure_path %}
+                            <a href="{{ url_for('student.serve_file', filename=od.brochure_path) }}" target="_blank"
+                               style="font-size:0.775rem; color:var(--primary); display:flex; align-items:center; gap:0.3rem;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                Brochure
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                            <div style="display:flex; align-items:center; gap:0.4rem;">
+                                <span style="font-size:0.7rem; color:var(--text-3); width:36px;">HOD</span>
+                                <span class="badge badge-{{ od.hod_status|lower }}">{{ od.hod_status }}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.4rem;">
+                                <span style="font-size:0.7rem; color:var(--text-3); width:36px;">ADM</span>
+                                <span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.4rem;">
+                                <span style="font-size:0.7rem; color:var(--text-3); width:36px;">FINAL</span>
+                                {% if od.is_leave %}
+                                <span class="badge badge-leave">Leave</span>
+                                {% else %}
+                                <span class="badge badge-{{ od.final_status|lower }}">{{ od.final_status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if od.verification_status == 'Pending Upload' %}
+                        <span style="font-size:0.8rem; color:var(--text-3);">Not uploaded</span>
+                        {% elif od.verification_status == 'Pending Verification' %}
+                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                            {% if od.certificate_path %}
+                            <a href="{{ url_for('student.serve_file', filename=od.certificate_path) }}" target="_blank"
+                               style="font-size:0.775rem; color:var(--primary);">View Certificate</a>
+                            {% endif %}
+                            <span class="badge badge-pending" style="font-size:0.7rem;">Awaiting Verify</span>
+                        </div>
+                        {% elif od.verification_status == 'Verified' %}
+                        <span class="badge badge-verified">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Verified
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                            {% if od.hod_status == 'Pending' %}
+                            <a href="{{ url_for('hod.approve', od_id=od.id) }}" class="btn btn-success btn-sm">✓ Approve</a>
+                            <a href="{{ url_for('hod.reject', od_id=od.id) }}" class="btn btn-danger btn-sm">✗ Reject</a>
+                            {% else %}
+                            <span style="font-size:0.78rem; color:var(--text-3);">Actioned</span>
+                            {% endif %}
+                            {% if od.verification_status == 'Pending Verification' %}
+                            <a href="{{ url_for('hod.verify_certificate', od_id=od.id) }}" class="btn btn-primary btn-sm">✔ Verify Cert</a>
+                            {% endif %}
+                            {% if od.student.is_under_penalty %}
+                            <a href="{{ url_for('hod.remove_penalty', user_id=od.student.id) }}" class="btn btn-ghost btn-sm" style="color:var(--danger); border-color:var(--danger);">Remove Penalty</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <h4>No OD Requests Found</h4>
+        <p>No students in your department have submitted OD requests yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

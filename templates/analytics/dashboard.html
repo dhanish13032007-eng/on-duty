@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}Analytics — Smart OD{% endblock %}
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header animate-fade-up">
+    <div class="page-header-left">
+        <h1>Analytics Dashboard</h1>
+        <p>Insights on OD requests, departments, and student performance</p>
+    </div>
+</div>
+
+<!-- Summary Stats Row -->
+<div class="stats-grid animate-stagger animate-fade-up" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat-card primary">
+        <div class="stat-icon primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Total OD Requests</p>
+            <h3>{{ total_ods }}</h3>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon success">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Approved</p>
+            <h3>{{ approved_ods }}</h3>
+        </div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon info">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Total Points Awarded</p>
+            <h3>{{ total_points }}</h3>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon warning">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Active Students</p>
+            <h3>{{ total_students }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="grid-2 animate-fade-up" style="margin-bottom:1.5rem;">
+    <!-- Dept Chart -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3>ODs by Department</h3>
+                <p>Total requests per department</p>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="deptChart" height="280"></canvas>
+        </div>
+    </div>
+
+    <!-- Monthly Trend -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3>Monthly OD Trend</h3>
+                <p>Applications submitted per month (current year)</p>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="monthlyChart" height="280"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="grid-2 animate-fade-up" style="margin-bottom:1.5rem;">
+    <!-- Section Chart -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3>ODs by Section</h3>
+                <p>Which sections are most active</p>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="sectionChart" height="260"></canvas>
+        </div>
+    </div>
+
+    <!-- Status Pie -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3>Approval Status Breakdown</h3>
+                <p>Overall OD outcome distribution</p>
+            </div>
+        </div>
+        <div class="chart-container" style="display:flex; justify-content:center;">
+            <canvas id="statusChart" height="260" style="max-width:260px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Leaderboard -->
+<div class="card animate-fade-up">
+    <div class="card-header">
+        <div>
+            <h3>🏆 Student Leaderboard</h3>
+            <p>Top performers ranked by verified event points</p>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Student</th>
+                    <th>Department</th>
+                    <th>Section</th>
+                    <th>Total Points</th>
+                    <th>Progress</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if top_students %}
+                {% for s in top_students %}
+                <tr>
+                    <td>
+                        {% if loop.index == 1 %}
+                        <div class="lb-rank gold">🥇</div>
+                        {% elif loop.index == 2 %}
+                        <div class="lb-rank silver">🥈</div>
+                        {% elif loop.index == 3 %}
+                        <div class="lb-rank bronze">🥉</div>
+                        {% else %}
+                        <div class="lb-rank other">#{{ loop.index }}</div>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ s.name }}</strong></td>
+                    <td>{{ s.department or '—' }}</td>
+                    <td>{{ s.section or '—' }}</td>
+                    <td>
+                        <span class="badge badge-approved" style="font-size:0.9rem; padding:0.3rem 0.9rem;">
+                            {{ s.total_points }} pts
+                        </span>
+                    </td>
+                    <td style="min-width:140px;">
+                        {% set max_pts = top_students[0].total_points if top_students else 1 %}
+                        {% set pct = ((s.total_points / max_pts) * 100)|int %}
+                        <div class="progress">
+                            <div class="progress-bar" style="width:{{ pct }}%;"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state" style="padding:2.5rem;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            <h4>No Leaderboard Data Yet</h4>
+                            <p>Students earn points when they upload and verify certificates.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Section-wise Leaderboard -->
+<div class="card animate-fade-up" style="margin-top:2rem;">
+    <div class="card-header">
+        <div>
+            <h3>🏅 Section-wise Leaderboards</h3>
+            <p>Top performers broken down by section</p>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1rem;">
+        {% if section_leaderboards %}
+            {% for section, students in section_leaderboards.items() %}
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden;">
+                <h4 style="background-color: #f9fafb; padding: 0.75rem; margin: 0; border-bottom: 1px solid var(--border-color); color: var(--primary-color);">Section: {{ section }}</h4>
+                <div class="table-container" style="margin: 0; border: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in students[:5] %} <!-- Top 5 per section -->
+                            <tr>
+                                <td>{{ s.name }}</td>
+                                <td><span class="badge badge-approved" style="font-size: 0.8rem;">{{ s.total_points }} pts</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="padding: 1rem; color: var(--text-secondary);">No section-wise data available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// ── Chart defaults ─────────────────────────────────────
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#64748b';
+
+// ── Palette ────────────────────────────────────────────
+const palette = ['#4f46e5','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // 1. Department bar chart
+    const deptLabels = {{ dept_labels | tojson }};
+    const deptData   = {{ dept_data   | tojson }};
+    new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: {
+            labels: deptLabels,
+            datasets: [{
+                label: 'OD Requests',
+                data: deptData,
+                backgroundColor: palette.map(c => c + 'cc'),
+                borderColor: palette,
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 2. Monthly trend line chart
+    const monthLabels   = {{ month_labels   | tojson }};
+    const monthlyData   = {{ monthly_data   | tojson }};
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'OD Requests',
+                data: monthlyData,
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79,70,229,0.08)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#4f46e5',
+                pointRadius: 5,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 3. Section bar chart
+    const sectionLabels = {{ section_labels | tojson }};
+    const sectionData   = {{ section_data   | tojson }};
+    new Chart(document.getElementById('sectionChart'), {
+        type: 'bar',
+        data: {
+            labels: sectionLabels,
+            datasets: [{
+                label: 'OD Count',
+                data: sectionData,
+                backgroundColor: '#10b981cc',
+                borderColor: '#10b981',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 4. Status doughnut
+    const statusLabels = ['Approved', 'Pending', 'Rejected'];
+    const statusData   = {{ status_data | tojson }};
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusData,
+                backgroundColor: ['#10b981cc','#f59e0bcc','#ef4444cc'],
+                borderColor:     ['#10b981',  '#f59e0b',  '#ef4444'],
+                borderWidth: 2,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '65%',
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

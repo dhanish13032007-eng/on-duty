@@ -1,0 +1,11 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Mail
+Werkzeug
+pandas
+gunicorn
+python-dotenv
+python-dateutil
+psycopg2-binary
+cloudinary

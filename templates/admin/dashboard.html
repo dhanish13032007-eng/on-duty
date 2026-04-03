@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — Smart OD{% endblock %}
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header animate-fade-up">
+    <div class="page-header-left">
+        <h1>Admin Dashboard</h1>
+        <p>Full system control — approve, override, and manage all OD records</p>
+    </div>
+    <div class="toolbar">
+        <a href="{{ url_for('admin.analytics') }}" class="btn btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Analytics
+        </a>
+        <a href="{{ url_for('admin.export_csv') }}" class="btn btn-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid animate-stagger animate-fade-up">
+    <div class="stat-card primary">
+        <div class="stat-icon primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Total OD Requests</p>
+            <h3>{{ ods|length }}</h3>
+            <small>All time</small>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon warning">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Pending My Approval</p>
+            <h3>{{ ods|selectattr('admin_status','equalto','Pending')|list|length }}</h3>
+            <small>Needs admin action</small>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon success">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Fully Approved</p>
+            <h3>{{ ods|selectattr('final_status','equalto','Approved')|list|length }}</h3>
+            <small>Both HOD &amp; Admin</small>
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon danger">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Students Under Penalty</p>
+            <h3>{{ students|selectattr('is_under_penalty')|list|length }}</h3>
+            <small>Blocked from applying</small>
+        </div>
+    </div>
+</div>
+
+<!-- All OD Requests -->
+<div class="card animate-fade-up" style="margin-bottom:1.5rem;">
+    <div class="card-header">
+        <div>
+            <h3>All OD Requests</h3>
+            <p>Approve, reject, or manually override any request</p>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student</th>
+                    <th>Event / College</th>
+                    <th>Date / Days</th>
+                    <th>HOD</th>
+                    <th>Admin</th>
+                    <th>Documents</th>
+                    <th>Final</th>
+                    <th>Admin Action</th>
+                    <th>Override</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for od in ods %}
+                <tr>
+                    <td style="color:var(--text-3); font-weight:600;">{{ loop.index }}</td>
+                    <td>
+                        <div class="td-user">
+                            <strong>{{ od.student.name }}</strong>
+                            <small>{{ od.student.username }} | {{ od.student.department }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-user">
+                            <strong>{{ od.event_name }}</strong>
+                            <small>{{ od.college_name }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        {{ od.od_date.strftime('%d %b %Y') }}<br>
+                        <small style="color:var(--primary); font-weight:600;">{{ od.number_of_days }} day{{ 's' if od.number_of_days > 1 }}</small>
+                    </td>
+                    <td><span class="badge badge-{{ od.hod_status|lower }}">{{ od.hod_status }}</span></td>
+                    <td><span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span></td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:0.3rem;">
+                            {% if od.approval_letter_path %}
+                            <a href="{{ url_for('student.serve_file', filename=od.approval_letter_path) }}" target="_blank"
+                               style="font-size:0.75rem; color:var(--primary); display:flex; align-items:center; gap:0.2rem;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                                Approval
+                            </a>
+                            {% endif %}
+                            {% if od.certificate_path %}
+                            <a href="{{ url_for('student.serve_file', filename=od.certificate_path) }}" target="_blank"
+                               style="font-size:0.75rem; color:var(--success); display:flex; align-items:center; gap:0.2rem;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                Certificate
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if od.is_leave %}
+                        <span class="badge badge-leave">Leave</span>
+                        {% else %}
+                        <span class="badge badge-{{ od.final_status|lower }}">{{ od.final_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if od.admin_status == 'Pending' %}
+                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                            <a href="{{ url_for('admin.approve', od_id=od.id) }}" class="btn btn-success btn-sm">✓ Approve</a>
+                            <a href="{{ url_for('admin.reject', od_id=od.id) }}" class="btn btn-danger btn-sm">✗ Reject</a>
+                        </div>
+                        {% else %}
+                        <span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.manual_status', od_id=od.id) }}" style="display:flex; gap:0.4rem; align-items:center;">
+                            <select name="final_status" class="form-control" style="padding:0.3rem 0.5rem; font-size:0.775rem; width:110px;">
+                                <option value="Approved" {% if od.final_status=='Approved' %}selected{% endif %}>Approved</option>
+                                <option value="Pending"  {% if od.final_status=='Pending'  %}selected{% endif %}>Pending</option>
+                                <option value="Rejected" {% if od.final_status=='Rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">Set</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not ods %}
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state" style="padding:2rem;">
+                            <h4>No OD requests yet</h4>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Students & Penalties -->
+<div class="card animate-fade-up">
+    <div class="card-header">
+        <div>
+            <h3>Student Management &amp; Penalties</h3>
+            <p>View all students and manage penalty statuses</p>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Reg. No.</th>
+                    <th>Dept / Section / Year</th>
+                    <th>Batch</th>
+                    <th>Penalty Status</th>
+                    <th>Penalty Until</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td><strong>{{ student.name }}</strong></td>
+                    <td style="font-family:monospace; font-size:0.85rem;">{{ student.username }}</td>
+                    <td>
+                        {{ student.department or '—' }} /
+                        {{ student.section or '—' }} /
+                        Yr {{ student.year or '—' }}
+                    </td>
+                    <td>{{ student.batch_number or '—' }}</td>
+                    <td>
+                        {% if student.is_under_penalty %}
+                        <span class="badge badge-rejected">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            Under Penalty
+                        </span>
+                        {% else %}
+                        <span class="badge badge-approved">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Normal
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.85rem;">
+                        {% if student.penalty_end_date %}
+                        {{ student.penalty_end_date.strftime('%d %b %Y') }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if student.is_under_penalty %}
+                        <a href="{{ url_for('admin.override_penalty', user_id=student.id) }}" class="btn btn-primary btn-sm">
+                            Remove Penalty
+                        </a>
+                        {% else %}
+                        <span style="color:var(--text-3); font-size:0.8rem;">No action needed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not students %}
+                <tr><td colspan="7"><div class="empty-state" style="padding:2rem;"><h4>No students registered</h4></div></td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

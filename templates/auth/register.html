@@ -1,0 +1,172 @@
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card animate-fade-in" style="max-width:560px;">
+        <!-- Logo -->
+        <div class="auth-logo">
+            <div class="auth-logo-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="auth-logo-text">
+                Smart OD System
+                <span>Create your account</span>
+            </div>
+        </div>
+
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Fill in the details below to register</p>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm">
+
+            <!-- Role Selector -->
+            <div class="form-group">
+                <label class="form-label">Select Your Role</label>
+                <div class="role-selector">
+                    <input type="radio" name="role" id="role_student" value="Student" class="role-option" checked>
+                    <label for="role_student" class="role-label">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        Student
+                    </label>
+                    <input type="radio" name="role" id="role_hod" value="HOD" class="role-option">
+                    <label for="role_hod" class="role-label">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                        HOD
+                    </label>
+                    <input type="radio" name="role" id="role_admin" value="Admin" class="role-option">
+                    <label for="role_admin" class="role-label">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Admin
+                    </label>
+                </div>
+            </div>
+
+            <!-- Common fields -->
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Raj Kumar">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="username">Username / Reg. No.</label>
+                    <input type="text" id="username" name="username" class="form-control" required placeholder="e.g. 22CSE001">
+                </div>
+                <div class="form-group full">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" required placeholder="you@college.edu">
+                </div>
+            </div>
+
+            <!-- Student-only fields -->
+            <div id="studentFields">
+                <hr class="form-divider">
+                <p class="form-section-title">Student Details</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="department">Department</label>
+                        <select id="department" name="department" class="form-control">
+                            <option value="">Select Department</option>
+                            <option value="CSE">Computer Science (CSE)</option>
+                            <option value="ECE">Electronics (ECE)</option>
+                            <option value="EEE">Electrical (EEE)</option>
+                            <option value="MECH">Mechanical (MECH)</option>
+                            <option value="CIVIL">Civil (CIVIL)</option>
+                            <option value="IT">Information Technology (IT)</option>
+                            <option value="AIDS">AI &amp; Data Science (AIDS)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="section">Section</label>
+                        <input type="text" id="section" name="section" class="form-control" placeholder="e.g. A">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="year">Year</label>
+                        <select id="year" name="year" class="form-control">
+                            <option value="">Select Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="batch_number">Batch Number</label>
+                        <input type="text" id="batch_number" name="batch_number" class="form-control" placeholder="e.g. 2022-2026">
+                    </div>
+                </div>
+            </div>
+
+            <!-- HOD/Admin department -->
+            <div id="staffFields" style="display:none;">
+                <hr class="form-divider">
+                <p class="form-section-title">Staff Details</p>
+                <div class="form-group">
+                    <label class="form-label" for="dept_staff">Department</label>
+                    <select id="dept_staff" name="department_staff" class="form-control">
+                        <option value="">Select Department (leave blank for Admin)</option>
+                        <option value="CSE">Computer Science (CSE)</option>
+                        <option value="ECE">Electronics (ECE)</option>
+                        <option value="EEE">Electrical (EEE)</option>
+                        <option value="MECH">Mechanical (MECH)</option>
+                        <option value="CIVIL">Civil (CIVIL)</option>
+                        <option value="IT">Information Technology (IT)</option>
+                        <option value="AIDS">AI &amp; Data Science (AIDS)</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="form-divider">
+            <p class="form-section-title">Security</p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" required placeholder="Min 6 characters">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required placeholder="Repeat password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                Create Account
+            </button>
+        </form>
+
+        <div style="margin-top:1.25rem; text-align:center;">
+            <a href="{{ url_for('auth.login') }}" style="font-size:0.875rem; color:var(--text-2);">
+                Already have an account? <strong style="color:var(--primary);">Sign In</strong>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+const roleInputs = document.querySelectorAll('.role-option');
+const studentFields = document.getElementById('studentFields');
+const staffFields   = document.getElementById('staffFields');
+
+function updateFields() {
+    const role = document.querySelector('.role-option:checked')?.value;
+    if (role === 'Student') {
+        studentFields.style.display = '';
+        staffFields.style.display = 'none';
+    } else {
+        studentFields.style.display = 'none';
+        staffFields.style.display = '';
+    }
+}
+
+roleInputs.forEach(r => r.addEventListener('change', updateFields));
+updateFields();
+
+// Client-side password match
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const p1 = document.getElementById('password').value;
+    const p2 = document.getElementById('confirm_password').value;
+    if (p1 !== p2) {
+        e.preventDefault();
+        alert('Passwords do not match!');
+    }
+});
+</script>
+{% endblock %}

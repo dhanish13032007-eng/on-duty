@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+venv/
+env/
+.env
+
+# Database (Local only)
+instance/
+*.db
+
+# Uploads (Cloudinary handles production)
+uploads/
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store

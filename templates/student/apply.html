@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Apply for OD — Smart OD{% endblock %}
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header animate-fade-up">
+    <div class="page-header-left">
+        <h1>Apply for On-Duty</h1>
+        <p>Submit your OD application for review by your HOD and Admin</p>
+    </div>
+    <!-- Removed Back button because there is no dashboard anymore -->
+</div>
+
+<!-- Workflow Steps -->
+<div class="workflow-steps animate-fade-up">
+    <div class="step active">
+        <div class="step-dot">1</div>
+        Fill Application
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-dot">2</div>
+        HOD + Admin Review
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-dot">3</div>
+        Upload Certificate
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+        <div class="step-dot">4</div>
+        HOD Verifies
+    </div>
+</div>
+
+<!-- Rules Info -->
+<div class="alert alert-info animate-fade-up" style="margin-bottom:1.5rem;">
+    <div class="alert-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="alert-body">
+        <h4>Application Rules</h4>
+        <p>You can apply for <strong>one OD per month</strong>. You must not have any pending certificate uploads. Both HOD and Admin must approve your request before it is considered valid.</p>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('student.apply') }}" enctype="multipart/form-data" id="applyForm">
+    <div class="grid-2 animate-fade-up">
+        <!-- Left Column: Event Details -->
+        <div class="card">
+            <p class="form-section-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Event Details
+            </p>
+
+            <div class="form-group">
+                <label class="form-label" for="event_name">Event Name <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="event_name" name="event_name" class="form-control" required placeholder="e.g. National Level Hackathon">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="college_name">Hosting College / Institution <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="college_name" name="college_name" class="form-control" required placeholder="e.g. IIT Madras">
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="od_date">OD Start Date <span style="color:var(--danger)">*</span></label>
+                    <input type="date" id="od_date" name="od_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="od_day">Day <span style="color:var(--danger)">*</span></label>
+                    <select id="od_day" name="od_day" class="form-control" required>
+                        <option value="">Select day</option>
+                        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                        <option>Thursday</option><option>Friday</option><option>Saturday</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="number_of_days">Number of OD Days <span style="color:var(--danger)">*</span></label>
+                <input type="number" id="number_of_days" name="number_of_days" class="form-control"
+                       value="1" min="1" max="30" required>
+                <p class="form-hint">Maximum 30 days per OD application</p>
+            </div>
+        </div>
+
+        <!-- Right Column: Your Info + Files -->
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+            <div class="card">
+                <p class="form-section-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Your Information
+                </p>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="name">Name <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="name" name="name" class="form-control" required placeholder="Full Name">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="username">Register No. <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="username" name="username" class="form-control" required placeholder="e.g. 22CSE001">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="department">Department <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="department" name="department" class="form-control" required placeholder="e.g. CSE">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="section">Section</label>
+                        <input type="text" id="section" name="section" class="form-control" placeholder="A/B/C">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; grid-column:span 2;">
+                        <label class="form-label" for="year">Year</label>
+                        <input type="number" id="year" name="year" class="form-control" min="1" max="4" placeholder="e.g. 3">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <p class="form-section-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Required Documents
+                </p>
+                <div class="form-group">
+                    <label class="form-label" for="approval_letter">Approval Letter <span style="color:var(--danger)">*</span></label>
+                    <p class="form-hint" style="margin-bottom:0.5rem;">Must be signed by both CC &amp; HOD</p>
+                    <input type="file" id="approval_letter" name="approval_letter" class="form-control"
+                           required accept=".jpg,.jpeg,.png,.pdf">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="brochure">Event Brochure <span style="color:var(--danger)">*</span></label>
+                    <input type="file" id="brochure" name="brochure" class="form-control"
+                           required accept=".jpg,.jpeg,.png,.pdf">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div style="margin-top:1.5rem; display:flex; gap:1rem; justify-content:flex-end;" class="animate-fade-up">
+        <a href="{{ url_for('auth.index') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+            Submit OD Application
+        </button>
+    </div>
+</form>
+
+<script>
+// Auto-fill day from date picker
+document.getElementById('od_date').addEventListener('change', function() {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const d = new Date(this.value + 'T12:00:00');
+    const dayName = days[d.getDay()];
+    const sel = document.getElementById('od_day');
+    for (let opt of sel.options) {
+        if (opt.value === dayName) { opt.selected = true; break; }
+    }
+});
+</script>
+{% endblock %}

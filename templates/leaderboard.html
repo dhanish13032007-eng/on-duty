@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}Public Leaderboard — Smart OD{% endblock %}
+{% block content %}
+<style>
+    .public-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+    .back-nav {
+        margin-bottom: 2rem;
+    }
+    .lb-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-md);
+    }
+    .top-three {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+        margin-top: 1rem;
+    }
+    .podium {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 140px;
+    }
+    .podium-rank {
+        font-size: 2rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+    }
+    .podium.gold .podium-rank   { color: #fbbf24; text-shadow: 0 0 20px rgba(251,191,36,0.3); }
+    .podium.silver .podium-rank { color: #cbd5e1; text-shadow: 0 0 20px rgba(203,213,225,0.3); }
+    .podium.bronze .podium-rank { color: #b45309; text-shadow: 0 0 20px rgba(180,83,9,0.3); }
+    
+    .podium-box {
+        width: 100%;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+        border-bottom: none;
+    }
+    .podium.gold .podium-box   { height: 160px; border-color: #fbbf24; background: rgba(251,191,36,0.05); }
+    .podium.silver .podium-box { height: 120px; border-color: #cbd5e1; background: rgba(203,213,225,0.05); }
+    .podium.bronze .podium-box { height: 90px;  border-color: #b45309; background: rgba(180,83,9,0.05); }
+
+    .podium-name { font-weight: 800; font-size: 0.95rem; margin-top: 0.75rem; color: var(--text); }
+    .podium-points { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
+
+    .list-row {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        transition: var(--transition);
+    }
+    .list-row:last-child { border-bottom: none; }
+    .list-row:hover { background: var(--surface-2); }
+    
+    .list-rank { width: 40px; font-weight: 800; color: var(--text-3); font-size: 1.1rem; }
+    .list-info { flex: 1; }
+    .list-name { font-weight: 700; color: var(--text); font-size: 1rem; }
+    .list-dept { font-size: 0.75rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem; }
+    .list-points { font-weight: 900; color: var(--primary); font-size: 1.1rem; }
+</style>
+
+<div class="public-container animate-fade-in">
+    <div class="back-nav">
+        <a href="{{ url_for('auth.index') }}" class="btn btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to Home
+        </a>
+    </div>
+
+    <div class="lb-card">
+        <div style="text-align:center; margin-bottom: 2rem;">
+            <p style="color:var(--primary); font-weight:800; font-size:0.8rem; letter-spacing:0.1em; text-transform:uppercase;">College Wide Rankings</p>
+            <h1 style="font-size:2.2rem; color:var(--text); margin-top:0.5rem; font-weight:900;">Global Leaderboard</h1>
+        </div>
+
+        {% if top_students %}
+            <!-- Podium -->
+            <div class="top-three">
+                {% if top_students|length > 1 %}
+                <div class="podium silver">
+                    <div class="podium-rank">2</div>
+                    <div class="podium-box"></div>
+                    <div class="podium-name">{{ top_students[1].name }}</div>
+                    <div class="podium-points">{{ top_students[1].total_points }} pts</div>
+                </div>
+                {% endif %}
+
+                <div class="podium gold">
+                    <div class="podium-rank">1</div>
+                    <div class="podium-box">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" style="margin-top:1rem;"><path d="M12 15l-3.5 2 1-4-3-2.5 4-.5L12 6l1.5 4 4 .5-3 2.5 1 4z"/></svg>
+                    </div>
+                    <div class="podium-name">{{ top_students[0].name }}</div>
+                    <div class="podium-points">{{ top_students[0].total_points }} pts</div>
+                </div>
+
+                {% if top_students|length > 2 %}
+                <div class="podium bronze">
+                    <div class="podium-rank">3</div>
+                    <div class="podium-box"></div>
+                    <div class="podium-name">{{ top_students[2].name }}</div>
+                    <div class="podium-points">{{ top_students[2].total_points }} pts</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- List -->
+            <div style="margin-top:2rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;">
+                {% for st in top_students[3:] %}
+                <div class="list-row">
+                    <div class="list-rank">#{{ loop.index + 3 }}</div>
+                    <div class="list-info">
+                        <div class="list-name">{{ st.name }}</div>
+                        <div class="list-dept">{{ st.department }} / {{ st.section or 'Gen' }}</div>
+                    </div>
+                    <div class="list-points">{{ st.total_points }} pts</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <h4 style="margin-top:1.5rem; color:var(--text);">No Rankings Yet</h4>
+                <p>Submit and verify ODs to start earning leaderboard points!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

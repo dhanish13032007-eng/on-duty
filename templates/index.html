@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart OD Management</title>
+    <!-- Use the new style.css for consistent theming -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+            background: radial-gradient(circle at top right, var(--surface-2), var(--bg) 70%);
+        }
+        h1 { margin-bottom: 2rem; font-size: 2.5rem; text-transform: uppercase; color: var(--text); font-weight: 900;}
+        h1 span { color: var(--primary); }
+        .options {
+            display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;
+        }
+        .theme-toggle-btn {
+            position: absolute; top: 1.5rem; right: 1.5rem;
+            background: var(--surface-2); border: 1px solid var(--border);
+            color: var(--text); padding: 0.5rem; border-radius: 0.5rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .theme-toggle-btn:hover { background: var(--border); color: var(--primary); }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle-btn" id="themeToggle" title="Toggle Theme">
+        <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+
+    <div class="container animate-fade-in">
+        <h1>Welcome to <span>Smart OD</span><br><small style="font-size:1.2rem; color:var(--text-3); font-weight:600;">Management System</small></h1>
+        <div class="options">
+            <a href="{{ url_for('student.apply') }}" class="btn btn-primary" style="padding:1rem 2rem; font-size:1.1rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                I am a Student
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-ghost" style="padding:1rem 2rem; font-size:1.1rem; border:1px solid var(--border);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                HOD / Admin Login
+            </a>
+            <div style="flex-basis:100%; height:0;"></div>
+            <a href="{{ url_for('auth.leaderboard') }}" class="btn btn-ghost" style="padding:1rem 2rem; font-size:1rem; color:var(--text-2);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#fbbf24;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                View Public Leaderboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const themeBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+
+        if(currentTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            let theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+            }
+        });
+    </script>
+</body>
+</html>

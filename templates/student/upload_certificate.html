@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Upload Certificate — Smart OD{% endblock %}
+{% block content %}
+
+<div class="page-header animate-fade-up">
+    <div class="page-header-left">
+        <h1>Upload Certificate</h1>
+        <p>Submit your event certificate to complete the OD process</p>
+    </div>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+    </a>
+</div>
+
+<!-- Workflow steps -->
+<div class="workflow-steps animate-fade-up">
+    <div class="step done"><div class="step-dot">✓</div>Applied</div>
+    <div class="step-line"></div>
+    <div class="step done"><div class="step-dot">✓</div>Approved</div>
+    <div class="step-line"></div>
+    <div class="step active"><div class="step-dot">3</div>Upload Certificate</div>
+    <div class="step-line"></div>
+    <div class="step"><div class="step-dot">4</div>HOD Verification</div>
+</div>
+
+<div class="grid-2 animate-fade-up">
+    <!-- OD Summary -->
+    <div class="card">
+        <p class="form-section-title">OD Summary</p>
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--surface-2); border-radius:var(--radius); border:1px solid var(--border);">
+                <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">EVENT</span>
+                <span style="font-size:0.875rem; font-weight:600; text-align:right;">{{ od.event_name }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--surface-2); border-radius:var(--radius); border:1px solid var(--border);">
+                <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">COLLEGE</span>
+                <span style="font-size:0.875rem; font-weight:600;">{{ od.college_name }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--surface-2); border-radius:var(--radius); border:1px solid var(--border);">
+                <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">DATE</span>
+                <span style="font-size:0.875rem; font-weight:600;">{{ od.od_date.strftime('%d %b %Y') }} ({{ od.od_day }})</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--surface-2); border-radius:var(--radius); border:1px solid var(--border);">
+                <span style="font-size:0.8rem; color:var(--text-3); font-weight:600;">DURATION</span>
+                <span style="font-size:0.875rem; font-weight:600; color:var(--primary);">{{ od.number_of_days }} day{{ 's' if od.number_of_days > 1 }}</span>
+            </div>
+        </div>
+
+        <!-- Points preview -->
+        <div style="margin-top:1.25rem; background:linear-gradient(135deg,var(--primary-light),#f0f9ff); border:1px solid #c7d2fe; border-radius:var(--radius); padding:1rem;">
+            <p style="font-size:0.75rem; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.5rem;">🏆 Points You'll Earn</p>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-2);">
+                <span>Participant</span><strong>10 pts</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-2); margin-top:0.25rem;">
+                <span>3rd Prize</span><strong>20 pts</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-2); margin-top:0.25rem;">
+                <span>2nd Prize</span><strong>30 pts</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-2); margin-top:0.25rem;">
+                <span>Winner 🥇</span><strong style="color:var(--warning);">50 pts</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="card">
+        <p class="form-section-title">Upload Details</p>
+        <form method="POST" action="{{ url_for('student.upload_certificate', od_id=od.id) }}" enctype="multipart/form-data">
+
+            <div class="form-group">
+                <label class="form-label" for="achievement">Your Achievement <span style="color:var(--danger)">*</span></label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.5rem;" id="achievementGrid">
+                    {% for val, label, pts in [('Participant','Participant','10'),('3rd Prize','3rd Prize','20'),('2nd Prize','2nd Prize','30'),('Winner','Winner 🥇','50')] %}
+                    <label style="border:2px solid var(--border); border-radius:var(--radius); padding:0.75rem; cursor:pointer; transition:var(--transition); display:flex; flex-direction:column; gap:0.25rem;" class="achieve-label" data-val="{{ val }}">
+                        <input type="radio" name="achievement" value="{{ val }}" required style="display:none;">
+                        <span style="font-weight:700; font-size:0.875rem;">{{ label }}</span>
+                        <span style="font-size:0.75rem; color:var(--text-3);">+{{ pts }} points</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:1.25rem;">
+                <label class="form-label" for="certificate">Event Certificate <span style="color:var(--danger)">*</span></label>
+                <p class="form-hint" style="margin-bottom:0.5rem;">Upload your participation/prize certificate. Accepted: JPG, PNG, PDF (max 16MB)</p>
+                <input type="file" id="certificate" name="certificate" class="form-control"
+                       required accept=".jpg,.jpeg,.png,.pdf">
+            </div>
+
+            <div class="alert alert-warning" style="margin-top:1.25rem; margin-bottom:1.5rem;">
+                <div class="alert-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div class="alert-body">
+                    <h4>Important!</h4>
+                    <p>Failure to upload within <strong>1 month</strong> of your OD date will result in a <strong>3-month penalty</strong> where you cannot apply for OD.</p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Submit Certificate
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.achieve-label').forEach(label => {
+    label.addEventListener('click', function() {
+        document.querySelectorAll('.achieve-label').forEach(l => {
+            l.style.borderColor = 'var(--border)';
+            l.style.background = '';
+        });
+        this.style.borderColor = 'var(--primary)';
+        this.style.background = 'var(--primary-light)';
+        this.querySelector('input[type=radio]').checked = true;
+    });
+});
+</script>
+{% endblock %}

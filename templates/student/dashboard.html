@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard — Smart OD{% endblock %}
+{% block content %}
+
+{% if current_user.is_under_penalty %}
+<div class="penalty-banner animate-fade-up">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div class="penalty-banner-text">
+        <h4>⚠ You are currently under penalty</h4>
+        <p>You cannot apply for OD until <strong>{{ current_user.penalty_end_date.strftime('%d %b %Y') if current_user.penalty_end_date else 'further notice' }}</strong>. Contact your HOD or Admin to resolve this.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Page Header -->
+<div class="page-header animate-fade-up">
+    <div class="page-header-left">
+        <h1>My OD Dashboard</h1>
+        <p>Track your on-duty applications and certificates</p>
+    </div>
+    <div class="toolbar">
+        {% if not current_user.is_under_penalty %}
+        <a href="{{ url_for('student.apply') }}" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New OD Application
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid animate-stagger animate-fade-up">
+    <div class="stat-card primary">
+        <div class="stat-icon primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Total ODs</p>
+            <h3>{{ ods|length }}</h3>
+            <small>All time submissions</small>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon success">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Approved</p>
+            <h3>{{ ods|selectattr('final_status','equalto','Approved')|list|length }}</h3>
+            <small>Fully approved ODs</small>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon warning">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Pending</p>
+            <h3>{{ ods|selectattr('final_status','equalto','Pending')|list|length }}</h3>
+            <small>Awaiting approval</small>
+        </div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon info">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Leaderboard Points</p>
+            <h3>{{ points }}</h3>
+            <small>From verified ODs</small>
+        </div>
+    </div>
+</div>
+
+<!-- OD Table -->
+<div class="card animate-fade-up">
+    <div class="card-header">
+        <div>
+            <h3>OD Applications</h3>
+            <p>Your complete on-duty history</p>
+        </div>
+    </div>
+
+    {% if ods %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Event / College</th>
+                    <th>OD Date</th>
+                    <th>Days</th>
+                    <th>HOD</th>
+                    <th>Admin</th>
+                    <th>Final Status</th>
+                    <th>Certificate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for od in ods %}
+                <tr>
+                    <td style="color:var(--text-3); font-weight:600;">{{ loop.index }}</td>
+                    <td>
+                        <div class="td-user">
+                            <strong>{{ od.event_name }}</strong>
+                            <small>{{ od.college_name }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        {{ od.od_date.strftime('%d %b %Y') }}<br>
+                        <small style="color:var(--text-3);">{{ od.od_day }}</small>
+                    </td>
+                    <td>
+                        <span style="font-weight:700; color:var(--primary);">{{ od.number_of_days }}</span>
+                        <small style="color:var(--text-3);"> day{{ 's' if od.number_of_days > 1 }}</small>
+                    </td>
+                    <td><span class="badge badge-{{ od.hod_status|lower }}">{{ od.hod_status }}</span></td>
+                    <td><span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span></td>
+                    <td>
+                        {% if od.is_leave %}
+                        <span class="badge badge-leave">Converted to Leave</span>
+                        {% else %}
+                        <span class="badge badge-{{ od.final_status|lower }}">{{ od.final_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if od.final_status == 'Approved' %}
+                            {% if od.verification_status == 'Pending Upload' %}
+                            <a href="{{ url_for('student.upload_certificate', od_id=od.id) }}" class="btn btn-warning btn-sm">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Upload
+                            </a>
+                            {% elif od.verification_status == 'Pending Verification' %}
+                            <span class="badge badge-pending">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Awaiting HOD
+                            </span>
+                            {% elif od.verification_status == 'Verified' %}
+                            <span class="badge badge-verified">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                Verified ✓
+                            </span>
+                            {% endif %}
+                        {% else %}
+                        <span style="color:var(--text-3); font-size:0.8rem;">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <h4>No OD Applications Yet</h4>
+        <p>Click "New OD Application" to submit your first request.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
