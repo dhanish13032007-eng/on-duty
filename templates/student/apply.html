@@ -6,9 +6,12 @@
 <div class="page-header animate-fade-up">
     <div class="page-header-left">
         <h1>Apply for On-Duty</h1>
-        <p>Submit your OD application for review by your HOD and Admin</p>
+        <p>Welcome, <strong>{{ current_user.name }}</strong> · {{ current_user.department }} {% if current_user.section %}· Sec {{ current_user.section }}{% endif %}</p>
     </div>
-    <!-- Removed Back button because there is no dashboard anymore -->
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Dashboard
+    </a>
 </div>
 
 <!-- Workflow Steps -->
@@ -41,12 +44,13 @@
     </div>
     <div class="alert-body">
         <h4>Application Rules</h4>
-        <p>You can apply for <strong>one OD per month</strong>. You must not have any pending certificate uploads. Both HOD and Admin must approve your request before it is considered valid.</p>
+        <p>You can apply for <strong>one OD per calendar month</strong>. If you have a previously approved OD with a pending certificate upload, you must upload it first. Files must be PDF, JPG, or PNG and under <strong>5 MB</strong>.</p>
     </div>
 </div>
 
 <form method="POST" action="{{ url_for('student.apply') }}" enctype="multipart/form-data" id="applyForm">
     <div class="grid-2 animate-fade-up">
+
         <!-- Left Column: Event Details -->
         <div class="card">
             <p class="form-section-title">
@@ -56,11 +60,13 @@
 
             <div class="form-group">
                 <label class="form-label" for="event_name">Event Name <span style="color:var(--danger)">*</span></label>
-                <input type="text" id="event_name" name="event_name" class="form-control" required placeholder="e.g. National Level Hackathon">
+                <input type="text" id="event_name" name="event_name" class="form-control" required
+                       placeholder="e.g. National Level Hackathon">
             </div>
             <div class="form-group">
                 <label class="form-label" for="college_name">Hosting College / Institution <span style="color:var(--danger)">*</span></label>
-                <input type="text" id="college_name" name="college_name" class="form-control" required placeholder="e.g. IIT Madras">
+                <input type="text" id="college_name" name="college_name" class="form-control" required
+                       placeholder="e.g. IIT Madras">
             </div>
             <div class="form-grid">
                 <div class="form-group">
@@ -80,65 +86,77 @@
                 <label class="form-label" for="number_of_days">Number of OD Days <span style="color:var(--danger)">*</span></label>
                 <input type="number" id="number_of_days" name="number_of_days" class="form-control"
                        value="1" min="1" max="30" required>
-                <p class="form-hint">Maximum 30 days per OD application</p>
+                <p class="form-hint">Maximum 30 days per application</p>
             </div>
         </div>
 
-        <!-- Right Column: Your Info + Files -->
-        <div style="display:flex; flex-direction:column; gap:1.5rem;">
-            <div class="card">
+        <!-- Right Column: Auto-filled Info + Files -->
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+            <!-- Auto-filled student card -->
+            <div class="card" style="background:linear-gradient(135deg,rgba(79,70,229,0.08),rgba(79,70,229,0.02));border:1px solid rgba(79,70,229,0.25);">
                 <p class="form-section-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Your Information
+                    Your Information <span style="font-size:0.7rem;color:var(--primary);margin-left:0.5rem;font-weight:400;">(auto-filled from profile)</span>
                 </p>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" for="name">Name <span style="color:var(--danger)">*</span></label>
-                        <input type="text" id="name" name="name" class="form-control" required placeholder="Full Name">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                    <div>
+                        <p style="font-size:0.75rem;color:var(--text-3);margin-bottom:0.2rem;">Name</p>
+                        <p style="font-weight:600;color:var(--text);">{{ current_user.name }}</p>
                     </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" for="username">Register No. <span style="color:var(--danger)">*</span></label>
-                        <input type="text" id="username" name="username" class="form-control" required placeholder="e.g. 22CSE001">
+                    <div>
+                        <p style="font-size:0.75rem;color:var(--text-3);margin-bottom:0.2rem;">Register No.</p>
+                        <p style="font-weight:600;color:var(--text);font-family:monospace;">{{ current_user.username }}</p>
                     </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" for="department">Department <span style="color:var(--danger)">*</span></label>
-                        <input type="text" id="department" name="department" class="form-control" required placeholder="e.g. CSE">
+                    <div>
+                        <p style="font-size:0.75rem;color:var(--text-3);margin-bottom:0.2rem;">Department</p>
+                        <p style="font-weight:600;color:var(--text);">{{ current_user.department or '—' }}</p>
                     </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" for="section">Section</label>
-                        <input type="text" id="section" name="section" class="form-control" placeholder="A/B/C">
-                    </div>
-                    <div class="form-group" style="margin-bottom:0; grid-column:span 2;">
-                        <label class="form-label" for="year">Year</label>
-                        <input type="number" id="year" name="year" class="form-control" min="1" max="4" placeholder="e.g. 3">
+                    <div>
+                        <p style="font-size:0.75rem;color:var(--text-3);margin-bottom:0.2rem;">Section / Year</p>
+                        <p style="font-weight:600;color:var(--text);">{{ current_user.section or '—' }} / Year {{ current_user.year or '—' }}</p>
                     </div>
                 </div>
+                <p style="font-size:0.75rem;color:var(--text-3);margin-top:0.75rem;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    To update your details, contact your administrator.
+                </p>
             </div>
 
+            <!-- Document uploads -->
             <div class="card">
                 <p class="form-section-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     Required Documents
                 </p>
+
                 <div class="form-group">
-                    <label class="form-label" for="approval_letter">Approval Letter <span style="color:var(--danger)">*</span></label>
-                    <p class="form-hint" style="margin-bottom:0.5rem;">Must be signed by both CC &amp; HOD</p>
+                    <label class="form-label" for="approval_letter">
+                        Approval Letter <span style="color:var(--danger)">*</span>
+                    </label>
+                    <p class="form-hint" style="margin-bottom:0.5rem;">Must be signed by CC &amp; HOD · PDF/JPG/PNG · Max 5 MB</p>
                     <input type="file" id="approval_letter" name="approval_letter" class="form-control"
-                           required accept=".jpg,.jpeg,.png,.pdf">
+                           required accept=".jpg,.jpeg,.png,.pdf" data-label="Approval Letter">
+                    <p id="approval_err" style="font-size:0.8rem;color:var(--danger);margin-top:0.3rem;display:none;"></p>
                 </div>
+
                 <div class="form-group" style="margin-bottom:0;">
-                    <label class="form-label" for="brochure">Event Brochure <span style="color:var(--danger)">*</span></label>
+                    <label class="form-label" for="brochure">
+                        Event Brochure <span style="color:var(--danger)">*</span>
+                    </label>
+                    <p class="form-hint" style="margin-bottom:0.5rem;">PDF/JPG/PNG · Max 5 MB</p>
                     <input type="file" id="brochure" name="brochure" class="form-control"
-                           required accept=".jpg,.jpeg,.png,.pdf">
+                           required accept=".jpg,.jpeg,.png,.pdf" data-label="Brochure">
+                    <p id="brochure_err" style="font-size:0.8rem;color:var(--danger);margin-top:0.3rem;display:none;"></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Submit -->
-    <div style="margin-top:1.5rem; display:flex; gap:1rem; justify-content:flex-end;" class="animate-fade-up">
-        <a href="{{ url_for('auth.index') }}" class="btn btn-ghost">Cancel</a>
-        <button type="submit" class="btn btn-primary">
+    <!-- Submit Row -->
+    <div style="margin-top:1.5rem;display:flex;gap:1rem;justify-content:flex-end;" class="animate-fade-up">
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submitOdBtn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
             Submit OD Application
         </button>
@@ -146,7 +164,7 @@
 </form>
 
 <script>
-// Auto-fill day from date picker
+// ── Auto-fill day name from date picker ─────────────────────────────────────
 document.getElementById('od_date').addEventListener('change', function() {
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const d = new Date(this.value + 'T12:00:00');
@@ -155,6 +173,44 @@ document.getElementById('od_date').addEventListener('change', function() {
     for (let opt of sel.options) {
         if (opt.value === dayName) { opt.selected = true; break; }
     }
+});
+
+// ── Client-side file size validation (5 MB) ─────────────────────────────────
+const MAX_BYTES = 5 * 1024 * 1024;
+function checkFileSize(inputEl, errEl) {
+    const file = inputEl.files[0];
+    errEl.style.display = 'none';
+    if (file && file.size > MAX_BYTES) {
+        errEl.textContent = `"${file.name}" is ${(file.size/1024/1024).toFixed(1)} MB — exceeds the 5 MB limit.`;
+        errEl.style.display = 'block';
+        inputEl.value = '';
+        return false;
+    }
+    return true;
+}
+
+document.getElementById('approval_letter').addEventListener('change', function() {
+    checkFileSize(this, document.getElementById('approval_err'));
+});
+document.getElementById('brochure').addEventListener('change', function() {
+    checkFileSize(this, document.getElementById('brochure_err'));
+});
+
+// ── Loading state on submit ──────────────────────────────────────────────────
+document.getElementById('applyForm').addEventListener('submit', function(e) {
+    const approvalOk = checkFileSize(
+        document.getElementById('approval_letter'),
+        document.getElementById('approval_err')
+    );
+    const brochureOk = checkFileSize(
+        document.getElementById('brochure'),
+        document.getElementById('brochure_err')
+    );
+    if (!approvalOk || !brochureOk) { e.preventDefault(); return; }
+
+    const btn = document.getElementById('submitOdBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Submitting…';
 });
 </script>
 {% endblock %}

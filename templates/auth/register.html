@@ -1,6 +1,31 @@
-{% block content %}
+<!DOCTYPE html>
+<!-- Smart OD — Student Registration -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart OD Management — Update your account">
+    <title>Update Account — Smart OD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        const t = localStorage.getItem('theme') || 'dark';
+        if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    </script>
+</head>
+<body>
+<button id="themeBtnLanding" title="Toggle Theme" style="position:fixed;top:1.5rem;right:1.5rem;z-index:1000;background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:0.6rem;border-radius:0.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);transition:0.3s;">
+    <svg id="themeIconLanding" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>
+</button>
+
 <div class="auth-wrapper">
-    <div class="auth-card animate-fade-in" style="max-width:560px;">
+    <div class="auth-card animate-fade-in" style="max-width:580px;">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}{% for category, message in messages %}
+          <div class="flash {{ category }}" style="margin-bottom:1rem;">{{ message }}</div>
+          {% endfor %}{% endif %}
+        {% endwith %}
+
         <!-- Logo -->
         <div class="auth-logo">
             <div class="auth-logo-icon">
@@ -8,100 +33,50 @@
             </div>
             <div class="auth-logo-text">
                 Smart OD System
-                <span>Create your account</span>
+                <span>Student Registration</span>
             </div>
         </div>
 
         <h1 class="auth-title">Create Account</h1>
-        <p class="auth-subtitle">Fill in the details below to register</p>
+        <p class="auth-subtitle">Register to apply and track your OD requests</p>
 
         <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm">
 
-            <!-- Role Selector -->
-            <div class="form-group">
-                <label class="form-label">Select Your Role</label>
-                <div class="role-selector">
-                    <input type="radio" name="role" id="role_student" value="Student" class="role-option" checked>
-                    <label for="role_student" class="role-label">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                        Student
-                    </label>
-                    <input type="radio" name="role" id="role_hod" value="HOD" class="role-option">
-                    <label for="role_hod" class="role-label">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                        HOD
-                    </label>
-                    <input type="radio" name="role" id="role_admin" value="Admin" class="role-option">
-                    <label for="role_admin" class="role-label">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        Admin
-                    </label>
-                </div>
-            </div>
-
-            <!-- Common fields -->
+            <!-- Personal Info -->
+            <p class="form-section-title" style="margin-bottom:0.75rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Personal Information
+            </p>
             <div class="form-grid">
                 <div class="form-group">
-                    <label class="form-label" for="name">Full Name</label>
-                    <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Raj Kumar">
+                    <label class="form-label" for="name">Full Name <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="reg_full_name" name="name" class="form-control" required
+                           autocomplete="name"
+                           placeholder="e.g. Raj Kumar" autocomplete="name">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="username">Username / Reg. No.</label>
-                    <input type="text" id="username" name="username" class="form-control" required placeholder="e.g. 22CSE001">
+                    <label class="form-label" for="username">Register Number <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="reg_number" name="username" class="form-control" required
+                           placeholder="e.g. 22CSE001" autocomplete="off"
+                           inputmode="text">
                 </div>
                 <div class="form-group full">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-control" required placeholder="you@college.edu">
+                    <label class="form-label" for="email">Email Address <span style="color:var(--danger)">*</span></label>
+                    <input type="email" id="reg_email" name="email" class="form-control" required
+                           placeholder="you@college.edu" autocomplete="email">
                 </div>
             </div>
 
-            <!-- Student-only fields -->
-            <div id="studentFields">
-                <hr class="form-divider">
-                <p class="form-section-title">Student Details</p>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label" for="department">Department</label>
-                        <select id="department" name="department" class="form-control">
-                            <option value="">Select Department</option>
-                            <option value="CSE">Computer Science (CSE)</option>
-                            <option value="ECE">Electronics (ECE)</option>
-                            <option value="EEE">Electrical (EEE)</option>
-                            <option value="MECH">Mechanical (MECH)</option>
-                            <option value="CIVIL">Civil (CIVIL)</option>
-                            <option value="IT">Information Technology (IT)</option>
-                            <option value="AIDS">AI &amp; Data Science (AIDS)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="section">Section</label>
-                        <input type="text" id="section" name="section" class="form-control" placeholder="e.g. A">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="year">Year</label>
-                        <select id="year" name="year" class="form-control">
-                            <option value="">Select Year</option>
-                            <option value="1">1st Year</option>
-                            <option value="2">2nd Year</option>
-                            <option value="3">3rd Year</option>
-                            <option value="4">4th Year</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="batch_number">Batch Number</label>
-                        <input type="text" id="batch_number" name="batch_number" class="form-control" placeholder="e.g. 2022-2026">
-                    </div>
-                </div>
-            </div>
-
-            <!-- HOD/Admin department -->
-            <div id="staffFields" style="display:none;">
-                <hr class="form-divider">
-                <p class="form-section-title">Staff Details</p>
+            <hr class="form-divider">
+            <p class="form-section-title" style="margin-bottom:0.75rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Academic Details
+            </p>
+            <div class="form-grid">
                 <div class="form-group">
-                    <label class="form-label" for="dept_staff">Department</label>
-                    <select id="dept_staff" name="department_staff" class="form-control">
-                        <option value="">Select Department (leave blank for Admin)</option>
+                    <label class="form-label" for="department">Department <span style="color:var(--danger)">*</span></label>
+                    <select id="department" name="department" class="form-control" required>
+                        <option value="">Select Department</option>
                         <option value="CSE">Computer Science (CSE)</option>
                         <option value="ECE">Electronics (ECE)</option>
                         <option value="EEE">Electrical (EEE)</option>
@@ -109,64 +84,114 @@
                         <option value="CIVIL">Civil (CIVIL)</option>
                         <option value="IT">Information Technology (IT)</option>
                         <option value="AIDS">AI &amp; Data Science (AIDS)</option>
+                        <option value="Other">Other</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="section">Section</label>
+                    <input type="text" id="section" name="section" class="form-control"
+                           placeholder="e.g. A" maxlength="5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="year">Year</label>
+                    <select id="year" name="year" class="form-control">
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="batch_number">Batch Number</label>
+                    <input type="text" id="batch_number" name="batch_number" class="form-control"
+                           placeholder="e.g. 2022-2026">
                 </div>
             </div>
 
             <hr class="form-divider">
-            <p class="form-section-title">Security</p>
+            <p class="form-section-title" style="margin-bottom:0.75rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:0.3rem;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Security
+            </p>
             <div class="form-grid">
                 <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" required placeholder="Min 6 characters">
+                    <label class="form-label" for="password">Password <span style="color:var(--danger)">*</span></label>
+                    <input type="password" id="reg_password" name="password" class="form-control" required
+                           placeholder="Min. 6 characters" minlength="6" autocomplete="new-password">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="confirm_password">Confirm Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required placeholder="Repeat password">
+                    <label class="form-label" for="confirm_password">Confirm Password <span style="color:var(--danger)">*</span></label>
+                    <input type="password" id="reg_confirm" name="confirm_password" class="form-control" required
+                           placeholder="Repeat password" autocomplete="new-password">
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.5rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            <!-- Strength indicator -->
+            <div id="pwStrength" style="height:4px;border-radius:2px;background:var(--border);margin:-0.5rem 0 1rem;transition:0.3s;">
+                <div id="pwBar" style="height:100%;width:0%;border-radius:2px;transition:0.4s;background:#10b981;"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" id="submitBtn" style="margin-top:0.25rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+                </svg>
                 Create Account
             </button>
         </form>
 
-        <div style="margin-top:1.25rem; text-align:center;">
-            <a href="{{ url_for('auth.login') }}" style="font-size:0.875rem; color:var(--text-2);">
-                Already have an account? <strong style="color:var(--primary);">Sign In</strong>
+        <div style="margin-top:1.25rem;text-align:center;">
+            <a href="{{ url_for('auth.login') }}" style="font-size:0.875rem;color:var(--text-2);">
+                Already registered? <strong style="color:var(--primary);">Sign In →</strong>
             </a>
         </div>
     </div>
 </div>
 
 <script>
-const roleInputs = document.querySelectorAll('.role-option');
-const studentFields = document.getElementById('studentFields');
-const staffFields   = document.getElementById('staffFields');
-
-function updateFields() {
-    const role = document.querySelector('.role-option:checked')?.value;
-    if (role === 'Student') {
-        studentFields.style.display = '';
-        staffFields.style.display = 'none';
-    } else {
-        studentFields.style.display = 'none';
-        staffFields.style.display = '';
-    }
+// Theme
+const moonSVG = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const sunSVG  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+const themeIcon = document.getElementById('themeIconLanding');
+function syncThemeIcon() {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    themeIcon.innerHTML = isDark ? sunSVG : moonSVG;
 }
+syncThemeIcon();
+document.getElementById('themeBtnLanding').addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    syncThemeIcon();
+});
 
-roleInputs.forEach(r => r.addEventListener('change', updateFields));
-updateFields();
+// Password strength
+document.getElementById('reg_password').addEventListener('input', function() {
+    const v = this.value;
+    const bar = document.getElementById('pwBar');
+    let s = 0;
+    if (v.length >= 6) s += 33;
+    if (/[A-Z]/.test(v)) s += 33;
+    if (/[0-9!@#$%]/.test(v)) s += 34;
+    bar.style.width = s + '%';
+    bar.style.transition = 'width 0.3s ease';
+    bar.style.background = s < 40 ? '#ef4444' : s < 70 ? '#f59e0b' : '#10b981';
+});
 
-// Client-side password match
+// Client-side match check + loading state
 document.getElementById('registerForm').addEventListener('submit', function(e) {
-    const p1 = document.getElementById('password').value;
-    const p2 = document.getElementById('confirm_password').value;
+    const p1 = document.getElementById('reg_password').value;
+    const p2 = document.getElementById('reg_confirm').value;
     if (p1 !== p2) {
         e.preventDefault();
         alert('Passwords do not match!');
+        return;
     }
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Creating account…';
 });
 </script>
-{% endblock %}
+</body>
+</html>

@@ -28,7 +28,7 @@
         </div>
         <div class="stat-info">
             <p>Total OD Requests</p>
-            <h3>{{ ods|length }}</h3>
+            <h3>{{ stats.total }}</h3>
             <small>All time</small>
         </div>
     </div>
@@ -38,7 +38,7 @@
         </div>
         <div class="stat-info">
             <p>Pending My Approval</p>
-            <h3>{{ ods|selectattr('admin_status','equalto','Pending')|list|length }}</h3>
+            <h3>{{ stats.pending }}</h3>
             <small>Needs admin action</small>
         </div>
     </div>
@@ -48,7 +48,7 @@
         </div>
         <div class="stat-info">
             <p>Fully Approved</p>
-            <h3>{{ ods|selectattr('final_status','equalto','Approved')|list|length }}</h3>
+            <h3>{{ stats.approved }}</h3>
             <small>Both HOD &amp; Admin</small>
         </div>
     </div>
@@ -57,23 +57,46 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </div>
         <div class="stat-info">
-            <p>Students Under Penalty</p>
-            <h3>{{ students|selectattr('is_under_penalty')|list|length }}</h3>
-            <small>Blocked from applying</small>
+            <p>Rejected</p>
+            <h3>{{ stats.rejected }}</h3>
+            <small>Final rejection</small>
+        </div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon info">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Under Penalty</p>
+            <h3>{{ stats.under_penalty }}</h3>
+            <small>Blocked students</small>
         </div>
     </div>
 </div>
 
-<!-- All OD Requests -->
+<!-- OD Requests -->
 <div class="card animate-fade-up" style="margin-bottom:1.5rem;">
     <div class="card-header">
         <div>
             <h3>All OD Requests</h3>
             <p>Approve, reject, or manually override any request</p>
         </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <!-- Search bar -->
+            <input type="text" id="adminSearch" placeholder="🔍  Search student / event…"
+                   class="form-control" style="width:220px;padding:0.45rem 0.75rem;font-size:0.85rem;">
+            <!-- Filter tabs -->
+            <div class="filter-tabs" id="adminFilterTabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="pending">Pending</button>
+                <button class="filter-tab" data-filter="approved">Approved</button>
+                <button class="filter-tab" data-filter="rejected">Rejected</button>
+            </div>
+        </div>
     </div>
+
     <div class="table-container">
-        <table>
+        <table id="adminTable">
             <thead>
                 <tr>
                     <th>#</th>
@@ -90,12 +113,13 @@
             </thead>
             <tbody>
                 {% for od in ods %}
-                <tr>
-                    <td style="color:var(--text-3); font-weight:600;">{{ loop.index }}</td>
+                <tr id="admin-row-{{ od.id }}" data-status="{{ od.admin_status|lower }}"
+                    data-search="{{ od.student.name|lower }} {{ od.student.username|lower }} {{ od.event_name|lower }}">
+                    <td style="color:var(--text-3);font-weight:600;">{{ loop.index }}</td>
                     <td>
                         <div class="td-user">
                             <strong>{{ od.student.name }}</strong>
-                            <small>{{ od.student.username }} | {{ od.student.department }}</small>
+                            <small>{{ od.student.username }} · {{ od.student.department }}</small>
                         </div>
                     </td>
                     <td>
@@ -106,22 +130,22 @@
                     </td>
                     <td>
                         {{ od.od_date.strftime('%d %b %Y') }}<br>
-                        <small style="color:var(--primary); font-weight:600;">{{ od.number_of_days }} day{{ 's' if od.number_of_days > 1 }}</small>
+                        <small style="color:var(--primary);font-weight:600;">{{ od.number_of_days }} day{{ 's' if od.number_of_days > 1 }}</small>
                     </td>
                     <td><span class="badge badge-{{ od.hod_status|lower }}">{{ od.hod_status }}</span></td>
-                    <td><span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span></td>
+                    <td><span class="badge badge-{{ od.admin_status|lower }}" id="adm-badge-{{ od.id }}">{{ od.admin_status }}</span></td>
                     <td>
-                        <div style="display:flex; flex-direction:column; gap:0.3rem;">
+                        <div style="display:flex;flex-direction:column;gap:0.3rem;">
                             {% if od.approval_letter_path %}
                             <a href="{{ url_for('student.serve_file', filename=od.approval_letter_path) }}" target="_blank"
-                               style="font-size:0.75rem; color:var(--primary); display:flex; align-items:center; gap:0.2rem;">
+                               style="font-size:0.75rem;color:var(--primary);display:flex;align-items:center;gap:0.2rem;">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
                                 Approval
                             </a>
                             {% endif %}
                             {% if od.certificate_path %}
                             <a href="{{ url_for('student.serve_file', filename=od.certificate_path) }}" target="_blank"
-                               style="font-size:0.75rem; color:var(--success); display:flex; align-items:center; gap:0.2rem;">
+                               style="font-size:0.75rem;color:var(--success);display:flex;align-items:center;gap:0.2rem;">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                                 Certificate
                             </a>
@@ -129,25 +153,31 @@
                         </div>
                     </td>
                     <td>
-                        {% if od.is_leave %}
-                        <span class="badge badge-leave">Leave</span>
-                        {% else %}
-                        <span class="badge badge-{{ od.final_status|lower }}">{{ od.final_status }}</span>
-                        {% endif %}
+                        <span class="badge badge-{{ od.final_status|lower }}" id="adm-final-{{ od.id }}">
+                            {% if od.is_leave %}Leave{% else %}{{ od.final_status }}{% endif %}
+                        </span>
                     </td>
                     <td>
-                        {% if od.admin_status == 'Pending' %}
-                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
-                            <a href="{{ url_for('admin.approve', od_id=od.id) }}" class="btn btn-success btn-sm">✓ Approve</a>
-                            <a href="{{ url_for('admin.reject', od_id=od.id) }}" class="btn btn-danger btn-sm">✗ Reject</a>
+                        <div id="adm-actions-{{ od.id }}">
+                            {% if od.admin_status == 'Pending' %}
+                            <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                                <button class="btn btn-success btn-sm adm-approve-btn"
+                                        data-id="{{ od.id }}"
+                                        data-url="{{ url_for('admin.approve', od_id=od.id) }}">✓ Approve</button>
+                                <button class="btn btn-danger btn-sm adm-reject-btn"
+                                        data-id="{{ od.id }}"
+                                        data-url="{{ url_for('admin.reject', od_id=od.id) }}">✗ Reject</button>
+                            </div>
+                            {% else %}
+                            <span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span>
+                            {% endif %}
                         </div>
-                        {% else %}
-                        <span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span>
-                        {% endif %}
                     </td>
                     <td>
-                        <form method="POST" action="{{ url_for('admin.manual_status', od_id=od.id) }}" style="display:flex; gap:0.4rem; align-items:center;">
-                            <select name="final_status" class="form-control" style="padding:0.3rem 0.5rem; font-size:0.775rem; width:110px;">
+                        <form method="POST" action="{{ url_for('admin.manual_status', od_id=od.id) }}"
+                              style="display:flex;gap:0.4rem;align-items:center;">
+                            <select name="final_status" class="form-control"
+                                    style="padding:0.3rem 0.5rem;font-size:0.775rem;width:110px;">
                                 <option value="Approved" {% if od.final_status=='Approved' %}selected{% endif %}>Approved</option>
                                 <option value="Pending"  {% if od.final_status=='Pending'  %}selected{% endif %}>Pending</option>
                                 <option value="Rejected" {% if od.final_status=='Rejected' %}selected{% endif %}>Rejected</option>
@@ -158,13 +188,9 @@
                 </tr>
                 {% endfor %}
                 {% if not ods %}
-                <tr>
-                    <td colspan="9">
-                        <div class="empty-state" style="padding:2rem;">
-                            <h4>No OD requests yet</h4>
-                        </div>
-                    </td>
-                </tr>
+                <tr><td colspan="10">
+                    <div class="empty-state" style="padding:2rem;"><h4>No OD requests yet</h4></div>
+                </td></tr>
                 {% endif %}
             </tbody>
         </table>
@@ -176,7 +202,7 @@
     <div class="card-header">
         <div>
             <h3>Student Management &amp; Penalties</h3>
-            <p>View all students and manage penalty statuses</p>
+            <p>View all registered students and manage penalty statuses</p>
         </div>
     </div>
     <div class="table-container">
@@ -196,12 +222,8 @@
                 {% for student in students %}
                 <tr>
                     <td><strong>{{ student.name }}</strong></td>
-                    <td style="font-family:monospace; font-size:0.85rem;">{{ student.username }}</td>
-                    <td>
-                        {{ student.department or '—' }} /
-                        {{ student.section or '—' }} /
-                        Yr {{ student.year or '—' }}
-                    </td>
+                    <td style="font-family:monospace;font-size:0.85rem;">{{ student.username }}</td>
+                    <td>{{ student.department or '—' }} / {{ student.section or '—' }} / Yr {{ student.year or '—' }}</td>
                     <td>{{ student.batch_number or '—' }}</td>
                     <td>
                         {% if student.is_under_penalty %}
@@ -217,17 +239,13 @@
                         {% endif %}
                     </td>
                     <td style="font-size:0.85rem;">
-                        {% if student.penalty_end_date %}
-                        {{ student.penalty_end_date.strftime('%d %b %Y') }}
-                        {% else %}—{% endif %}
+                        {% if student.penalty_end_date %}{{ student.penalty_end_date.strftime('%d %b %Y') }}{% else %}—{% endif %}
                     </td>
                     <td>
                         {% if student.is_under_penalty %}
-                        <a href="{{ url_for('admin.override_penalty', user_id=student.id) }}" class="btn btn-primary btn-sm">
-                            Remove Penalty
-                        </a>
+                        <a href="{{ url_for('admin.override_penalty', user_id=student.id) }}" class="btn btn-primary btn-sm">Remove Penalty</a>
                         {% else %}
-                        <span style="color:var(--text-3); font-size:0.8rem;">No action needed</span>
+                        <span style="color:var(--text-3);font-size:0.8rem;">No action needed</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -239,4 +257,77 @@
         </table>
     </div>
 </div>
+
+<script>
+// ── Search bar ───────────────────────────────────────────────────────────────
+document.getElementById('adminSearch').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    document.querySelectorAll('#adminTable tbody tr[data-search]').forEach(row => {
+        row.style.display = (!q || row.dataset.search.includes(q)) ? '' : 'none';
+    });
+});
+
+// ── Filter tabs ──────────────────────────────────────────────────────────────
+document.querySelectorAll('#adminFilterTabs .filter-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('#adminFilterTabs .filter-tab').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('#adminTable tbody tr[data-status]').forEach(row => {
+            row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+        });
+    });
+});
+
+// ── AJAX approve/reject ──────────────────────────────────────────────────────
+function adminAction(odId, url) {
+    const actionsDiv = document.getElementById('adm-actions-' + odId);
+    const admBadge   = document.getElementById('adm-badge-' + odId);
+    const finalBadge = document.getElementById('adm-final-' + odId);
+    const row        = document.getElementById('admin-row-' + odId);
+
+    actionsDiv.innerHTML = '<span style="font-size:0.8rem;color:var(--text-3);">Processing…</span>';
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            admBadge.className   = 'badge badge-' + data.admin_status.toLowerCase();
+            admBadge.textContent = data.admin_status;
+            finalBadge.className   = 'badge badge-' + data.final_status.toLowerCase();
+            finalBadge.textContent = data.final_status;
+            row.dataset.status   = data.admin_status.toLowerCase();
+            actionsDiv.innerHTML = '<span class="badge badge-' + data.admin_status.toLowerCase() + '">' + data.admin_status + '</span>';
+            showToast(data.message, 'success');
+        } else {
+            actionsDiv.innerHTML = '<span style="color:var(--danger);font-size:0.8rem;">Error — <a href="">refresh</a></span>';
+            showToast(data.message || 'Action failed.', 'error');
+        }
+    })
+    .catch(() => {
+        actionsDiv.innerHTML = '<span style="color:var(--danger);font-size:0.8rem;">Network error</span>';
+        showToast('Network error. Please try again.', 'error');
+    });
+}
+
+document.querySelectorAll('.adm-approve-btn').forEach(btn =>
+    btn.addEventListener('click', () => adminAction(btn.dataset.id, btn.dataset.url))
+);
+document.querySelectorAll('.adm-reject-btn').forEach(btn =>
+    btn.addEventListener('click', () => adminAction(btn.dataset.id, btn.dataset.url))
+);
+
+// ── Toast helper ─────────────────────────────────────────────────────────────
+function showToast(msg, type) {
+    const toast = document.createElement('div');
+    toast.className = 'flash ' + type;
+    toast.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;min-width:260px;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity 0.4s'; setTimeout(()=>toast.remove(),400); }, 4000);
+}
+</script>
 {% endblock %}

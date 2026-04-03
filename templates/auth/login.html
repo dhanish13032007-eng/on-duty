@@ -3,135 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — Smart OD</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <meta name="description" content="Smart OD Management System — Sign in to your account">
+    <title>Sign In — Smart OD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #10b981;
-            --primary-glow: rgba(16, 185, 129, 0.3);
-            --bg: #060807;
-            --surface: #0d1411;
-            --surface-2: #131e1a;
-            --border: #20342b;
-            --text: #f8fafc;
-            --text-2: #94a3b8;
-            --text-3: #475569;
-            --danger: #f43f5e;
-            --success: #10b981;
+            --primary: #10b981; --primary-glow: rgba(16,185,129,0.3);
+            --bg: #060807; --surface: #0d1411; --surface-2: #131e1a;
+            --border: #20342b; --text: #f8fafc; --text-2: #94a3b8; --text-3: #475569;
+            --danger: #f43f5e; --success: #10b981; --info: #0ea5e9;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        [data-theme="light"] {
+            --bg: #f8fafc; --surface: #ffffff; --surface-2: #f1f5f9;
+            --border: #e2e8f0; --text: #0f172a; --text-2: #475569; --text-3: #64748b;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at top right, var(--surface-2), var(--bg) 70%);
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(ellipse at 70% 20%, rgba(16,185,129,0.08) 0%, transparent 55%),
+                        radial-gradient(ellipse at 20% 80%, rgba(14,165,233,0.06) 0%, transparent 50%),
+                        var(--bg);
         }
+        .auth-wrap { width: 100%; max-width: 440px; padding: 1.5rem; }
         .auth-card {
-            background: var(--surface);
-            border-radius: 1.5rem;
-            padding: 3rem;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border: 1px solid var(--border);
-            position: relative;
+            background: var(--surface); border-radius: 1.5rem; padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7); border: 1px solid var(--border);
+            position: relative; overflow: hidden;
+            animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
         }
         .auth-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, transparent, var(--primary), transparent);
         }
-        .auth-logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            justify-content: center;
-        }
-        .auth-logo-icon {
-            width: 50px; height: 50px;
-            background: var(--surface-2);
-            border: 1px solid var(--primary);
-            border-radius: 0.625rem;
-            display: flex; align-items: center; justify-content: center;
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Logo */
+        .logo { display:flex; align-items:center; gap:0.85rem; margin-bottom:2rem; justify-content:center; }
+        .logo-icon {
+            width:48px; height:48px; border-radius:0.75rem; display:flex; align-items:center; justify-content:center;
+            background: var(--surface-2); border: 1px solid var(--primary);
             box-shadow: 0 0 20px var(--primary-glow);
         }
-        .auth-logo-icon svg { color: var(--primary); width: 24px; height: 24px; }
-        .auth-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.5rem; text-align: center; }
-        .auth-subtitle { font-size: 0.85rem; color: var(--text-3); margin-bottom: 2rem; text-align: center; }
-        
-        .form-group { margin-bottom: 1.5rem; }
-        .form-label {
-            display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.05em; margin-bottom: 0.5rem; color: var(--text-2);
+        .logo-icon svg { color: var(--primary); }
+        .logo-text { line-height: 1.2; }
+        .logo-text strong { display:block; font-size:1.1rem; font-weight:900; letter-spacing:0.05em; }
+        .logo-text span { font-size:0.65rem; color:var(--primary); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; }
+
+        h1 { font-size:1.5rem; font-weight:900; margin-bottom:0.35rem; text-align:center; }
+        .subtitle { font-size:0.85rem; color:var(--text-3); text-align:center; margin-bottom:1.75rem; }
+
+        /* Role pills */
+        .role-pills { display:flex; gap:0.5rem; margin-bottom:1.75rem; background:var(--surface-2); border:1px solid var(--border); border-radius:0.5rem; padding:0.3rem; }
+        .role-pill {
+            flex:1; text-align:center; padding:0.45rem; border-radius:0.35rem; font-size:0.72rem;
+            font-weight:700; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer;
+            border:1px solid transparent; color:var(--text-3); background:transparent; transition:0.3s;
         }
-        .form-control {
-            width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border);
-            border-radius: 0.375rem; font-family: inherit; font-size: 0.9rem;
-            color: var(--text); background: var(--surface-2); outline: none; transition: 0.3s;
+        .role-pill.active { background:var(--primary); color:#000; border-color:var(--primary); box-shadow:0 0 10px var(--primary-glow); }
+
+        /* Flash */
+        .flash { padding:0.85rem 1rem; border-radius:0.5rem; font-size:0.84rem; margin-bottom:1rem;
+                 background:var(--surface-2); border:1px solid transparent; font-weight:500; }
+        .flash.error   { border-color:var(--danger); color:var(--danger); }
+        .flash.success { border-color:var(--success); color:var(--success); }
+        .flash.info    { border-color:var(--info); color:var(--info); }
+
+        /* Form */
+        .form-group { margin-bottom:1.25rem; }
+        label { display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase;
+                letter-spacing:0.06em; margin-bottom:0.45rem; color:var(--text-2); }
+        input {
+            width:100%; padding:0.75rem 1rem; border:1px solid var(--border); border-radius:0.5rem;
+            font-family:inherit; font-size:0.9rem; color:var(--text); background:var(--surface-2);
+            outline:none; transition:0.3s;
         }
-        .form-control:focus {
-            border-color: var(--primary); background: var(--bg);
-            box-shadow: 0 0 0 2px var(--primary-glow);
+        input:focus { border-color:var(--primary); background:var(--bg); box-shadow:0 0 0 3px var(--primary-glow); }
+        input::placeholder { color:var(--text-3); }
+
+        .btn {
+            width:100%; padding:0.8rem; background:rgba(16,185,129,0.12); color:var(--primary);
+            border:1px solid var(--primary); border-radius:0.5rem; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; transition:0.3s;
+            display:flex; align-items:center; justify-content:center; gap:0.5rem; font-size:0.875rem;
+            font-family:inherit; margin-top:0.5rem;
         }
-        .btn-primary {
-            width: 100%; padding: 0.75rem; background: rgba(16, 185, 129, 0.15);
-            color: var(--primary); border: 1px solid var(--primary); border-radius: 0.375rem;
-            font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.3s;
-            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        .btn:hover { background:var(--primary); color:#000; box-shadow:0 0 20px var(--primary-glow); }
+        .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+        .divider { text-align:center; font-size:0.78rem; color:var(--text-3); margin-top:1.5rem; }
+        .divider a { color:var(--primary); font-weight:700; text-decoration:none; }
+        .divider a:hover { text-decoration:underline; }
+
+        /* Theme toggle */
+        #themeBtn {
+            position:fixed; top:1.25rem; right:1.25rem; background:var(--surface-2);
+            border:1px solid var(--border); color:var(--text); padding:0.5rem; border-radius:0.5rem;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
         }
-        .btn-primary:hover {
-            background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow);
-        }
-        .flash-messages { margin-bottom: 1.5rem; }
-        .flash { padding: 1rem; border-radius: 0.375rem; font-size: 0.85rem; background: var(--surface-2); margin-bottom: 0.5rem; border: 1px solid transparent; }
-        .flash.error { border-color: var(--danger); color: var(--danger); box-shadow: 0 0 15px rgba(244, 63, 94, 0.15); }
-        .flash.success { border-color: var(--success); color: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); }
     </style>
+    <script>
+        const t = localStorage.getItem('theme') || 'dark';
+        if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+    </script>
 </head>
 <body>
+<button id="themeBtn" title="Toggle Theme">
+    <svg id="themeIco" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>
+</button>
+
+<div class="auth-wrap">
     <div class="auth-card">
-        <div class="auth-logo">
-            <div class="auth-logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <!-- Logo -->
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
             </div>
-            <div>
-                <span style="font-size:1.5rem; font-weight:900;">SMART OD</span>
+            <div class="logo-text">
+                <strong>Smart OD System</strong>
+                <span>Secure Sign In</span>
             </div>
         </div>
 
-        <h1 class="auth-title">Staff Portal</h1>
-        <p class="auth-subtitle">Login for HOD and Admin</p>
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Sign in to your account to continue</p>
 
-        <div class="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
+        <!-- Role hint pills (visual only) -->
+        <div class="role-pills" id="rolePills">
+            <div class="role-pill active" data-role="student">Student</div>
+            <div class="role-pill" data-role="hod">HOD</div>
+            <div class="role-pill" data-role="admin">Admin</div>
         </div>
 
-        <form method="POST" action="{{ url_for('auth.login') }}">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}{% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}{% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm">
             <div class="form-group">
-                <label class="form-label" for="username">Username</label>
-                <input type="text" id="username" name="username" class="form-control" required placeholder="Admin / HOD Username">
+                <label for="username" id="usernameLabel">Register Number</label>
+                <input type="text" id="username" name="username" required
+                       autocomplete="username" placeholder="e.g. 22CSE001">
             </div>
             <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" required placeholder="Enter password">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required
+                       autocomplete="current-password" placeholder="Enter your password">
             </div>
-            <button type="submit" class="btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <button type="submit" class="btn" id="loginBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                    <polyline points="10 17 15 12 10 7"/>
+                    <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
                 Sign In
             </button>
         </form>
+
+        <div class="divider" style="margin-top:1.25rem;">
+            New student? <a href="{{ url_for('auth.register') }}">Create an account →</a>
+        </div>
+        <div class="divider" style="margin-top:0.5rem;">
+            <a href="{{ url_for('auth.index') }}" style="color:var(--text-3);">← Back to Home</a>
+        </div>
     </div>
+</div>
+
+<script>
+// Theme
+const moonSVG = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const sunSVG  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+const ico = document.getElementById('themeIco');
+function syncIcon(){ ico.innerHTML = document.documentElement.getAttribute('data-theme')==='light' ? moonSVG : sunSVG; }
+syncIcon();
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+    const isLight = document.documentElement.getAttribute('data-theme')==='light';
+    document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
+    localStorage.setItem('theme', isLight ? 'dark' : 'light');
+    syncIcon();
+});
+
+// Role pills — update label placeholder only, login works for all roles
+const placeholders = {
+    student: { label: 'Register Number', ph: 'e.g. 22CSE001' },
+    hod:     { label: 'Staff Username',  ph: 'e.g. hod' },
+    admin:   { label: 'Admin Username',  ph: 'e.g. admin' }
+};
+document.querySelectorAll('.role-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+        document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        const info = placeholders[this.dataset.role];
+        document.getElementById('usernameLabel').textContent = info.label;
+        document.getElementById('username').placeholder = info.ph;
+    });
+});
+
+// Loading state
+document.getElementById('loginForm').addEventListener('submit', function() {
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Signing in…';
+});
+</script>
+<style>
+@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+</style>
 </body>
 </html>

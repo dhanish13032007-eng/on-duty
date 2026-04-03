@@ -14,7 +14,7 @@
     </a>
 </div>
 
-<!-- Stats -->
+<!-- Stats Cards (from backend stats dict) -->
 <div class="stats-grid animate-stagger animate-fade-up">
     <div class="stat-card primary">
         <div class="stat-icon primary">
@@ -22,8 +22,8 @@
         </div>
         <div class="stat-info">
             <p>Total Requests</p>
-            <h3>{{ ods|length }}</h3>
-            <small>All OD requests</small>
+            <h3>{{ stats.total }}</h3>
+            <small>All OD applications</small>
         </div>
     </div>
     <div class="stat-card warning">
@@ -32,7 +32,7 @@
         </div>
         <div class="stat-info">
             <p>Awaiting My Action</p>
-            <h3>{{ ods|selectattr('hod_status','equalto','Pending')|list|length }}</h3>
+            <h3>{{ stats.pending }}</h3>
             <small>Needs your review</small>
         </div>
     </div>
@@ -42,8 +42,18 @@
         </div>
         <div class="stat-info">
             <p>Approved by Me</p>
-            <h3>{{ ods|selectattr('hod_status','equalto','Approved')|list|length }}</h3>
+            <h3>{{ stats.approved }}</h3>
             <small>HOD approved</small>
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon danger">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </div>
+        <div class="stat-info">
+            <p>Rejected</p>
+            <h3>{{ stats.rejected }}</h3>
+            <small>By HOD</small>
         </div>
     </div>
     <div class="stat-card info">
@@ -51,9 +61,9 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <div class="stat-info">
-            <p>Pending Verification</p>
-            <h3>{{ ods|selectattr('verification_status','equalto','Pending Verification')|list|length }}</h3>
-            <small>Certificates to verify</small>
+            <p>Certs to Verify</p>
+            <h3>{{ stats.cert_pending }}</h3>
+            <small>Pending verification</small>
         </div>
     </div>
 </div>
@@ -63,15 +73,23 @@
     <div class="card-header">
         <div>
             <h3>Department OD Requests</h3>
-            <p>Review and action each request below</p>
+            <p>Review, approve, reject and verify certificates</p>
+        </div>
+        <!-- Filter Tabs -->
+        <div class="filter-tabs" id="hodFilterTabs">
+            <button class="filter-tab active" data-filter="all">All <span class="tab-count">{{ stats.total }}</span></button>
+            <button class="filter-tab" data-filter="pending">Pending <span class="tab-count">{{ stats.pending }}</span></button>
+            <button class="filter-tab" data-filter="approved">Approved <span class="tab-count">{{ stats.approved }}</span></button>
+            <button class="filter-tab" data-filter="rejected">Rejected <span class="tab-count">{{ stats.rejected }}</span></button>
         </div>
     </div>
 
     {% if ods %}
     <div class="table-container">
-        <table>
+        <table id="hodTable">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Student</th>
                     <th>Event / College</th>
                     <th>OD Date</th>
@@ -84,11 +102,12 @@
             </thead>
             <tbody>
                 {% for od in ods %}
-                <tr>
+                <tr id="hod-row-{{ od.id }}" data-status="{{ od.hod_status|lower }}">
+                    <td style="color:var(--text-3);font-weight:600;">{{ loop.index }}</td>
                     <td>
                         <div class="td-user">
                             <strong>{{ od.student.name }}</strong>
-                            <small>{{ od.student.username }} | Sec {{ od.student.section or '—' }} | Yr {{ od.student.year or '—' }}</small>
+                            <small>{{ od.student.username }} · Sec {{ od.student.section or '—' }} · Yr {{ od.student.year or '—' }}</small>
                         </div>
                     </td>
                     <td>
@@ -101,19 +120,19 @@
                         {{ od.od_date.strftime('%d %b %Y') }}<br>
                         <small style="color:var(--text-3);">{{ od.od_day }}</small>
                     </td>
-                    <td style="font-weight:700; color:var(--primary);">{{ od.number_of_days }}</td>
+                    <td style="font-weight:700;color:var(--primary);">{{ od.number_of_days }}</td>
                     <td>
-                        <div style="display:flex; flex-direction:column; gap:0.3rem;">
+                        <div style="display:flex;flex-direction:column;gap:0.3rem;">
                             {% if od.approval_letter_path %}
                             <a href="{{ url_for('student.serve_file', filename=od.approval_letter_path) }}" target="_blank"
-                               style="font-size:0.775rem; color:var(--primary); display:flex; align-items:center; gap:0.3rem;">
+                               style="font-size:0.775rem;color:var(--primary);display:flex;align-items:center;gap:0.3rem;">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
-                                Approval Letter
+                                Approval
                             </a>
                             {% endif %}
                             {% if od.brochure_path %}
                             <a href="{{ url_for('student.serve_file', filename=od.brochure_path) }}" target="_blank"
-                               style="font-size:0.775rem; color:var(--primary); display:flex; align-items:center; gap:0.3rem;">
+                               style="font-size:0.775rem;color:var(--primary);display:flex;align-items:center;gap:0.3rem;">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
                                 Brochure
                             </a>
@@ -121,35 +140,33 @@
                         </div>
                     </td>
                     <td>
-                        <div style="display:flex; flex-direction:column; gap:0.35rem;">
-                            <div style="display:flex; align-items:center; gap:0.4rem;">
-                                <span style="font-size:0.7rem; color:var(--text-3); width:36px;">HOD</span>
-                                <span class="badge badge-{{ od.hod_status|lower }}">{{ od.hod_status }}</span>
+                        <div style="display:flex;flex-direction:column;gap:0.35rem;" id="hod-status-{{ od.id }}">
+                            <div style="display:flex;align-items:center;gap:0.4rem;">
+                                <span style="font-size:0.7rem;color:var(--text-3);width:36px;">HOD</span>
+                                <span class="badge badge-{{ od.hod_status|lower }}" id="hod-badge-{{ od.id }}">{{ od.hod_status }}</span>
                             </div>
-                            <div style="display:flex; align-items:center; gap:0.4rem;">
-                                <span style="font-size:0.7rem; color:var(--text-3); width:36px;">ADM</span>
+                            <div style="display:flex;align-items:center;gap:0.4rem;">
+                                <span style="font-size:0.7rem;color:var(--text-3);width:36px;">ADM</span>
                                 <span class="badge badge-{{ od.admin_status|lower }}">{{ od.admin_status }}</span>
                             </div>
-                            <div style="display:flex; align-items:center; gap:0.4rem;">
-                                <span style="font-size:0.7rem; color:var(--text-3); width:36px;">FINAL</span>
-                                {% if od.is_leave %}
-                                <span class="badge badge-leave">Leave</span>
-                                {% else %}
-                                <span class="badge badge-{{ od.final_status|lower }}">{{ od.final_status }}</span>
-                                {% endif %}
+                            <div style="display:flex;align-items:center;gap:0.4rem;">
+                                <span style="font-size:0.7rem;color:var(--text-3);width:36px;">FINAL</span>
+                                <span class="badge badge-{{ od.final_status|lower }}" id="final-badge-hod-{{ od.id }}">
+                                    {% if od.is_leave %}Leave{% else %}{{ od.final_status }}{% endif %}
+                                </span>
                             </div>
                         </div>
                     </td>
                     <td>
                         {% if od.verification_status == 'Pending Upload' %}
-                        <span style="font-size:0.8rem; color:var(--text-3);">Not uploaded</span>
+                        <span style="font-size:0.8rem;color:var(--text-3);">Not uploaded</span>
                         {% elif od.verification_status == 'Pending Verification' %}
-                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                        <div style="display:flex;flex-direction:column;gap:0.4rem;">
                             {% if od.certificate_path %}
                             <a href="{{ url_for('student.serve_file', filename=od.certificate_path) }}" target="_blank"
-                               style="font-size:0.775rem; color:var(--primary);">View Certificate</a>
+                               style="font-size:0.775rem;color:var(--primary);">View Cert</a>
                             {% endif %}
-                            <span class="badge badge-pending" style="font-size:0.7rem;">Awaiting Verify</span>
+                            <a href="{{ url_for('hod.verify_certificate', od_id=od.id) }}" class="btn btn-primary btn-sm">✔ Verify</a>
                         </div>
                         {% elif od.verification_status == 'Verified' %}
                         <span class="badge badge-verified">
@@ -159,18 +176,21 @@
                         {% endif %}
                     </td>
                     <td>
-                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                        <div style="display:flex;flex-direction:column;gap:0.4rem;" id="hod-actions-{{ od.id }}">
                             {% if od.hod_status == 'Pending' %}
-                            <a href="{{ url_for('hod.approve', od_id=od.id) }}" class="btn btn-success btn-sm">✓ Approve</a>
-                            <a href="{{ url_for('hod.reject', od_id=od.id) }}" class="btn btn-danger btn-sm">✗ Reject</a>
+                            <button class="btn btn-success btn-sm hod-approve-btn" data-id="{{ od.id }}"
+                                    data-url="{{ url_for('hod.approve', od_id=od.id) }}">
+                                ✓ Approve
+                            </button>
+                            <button class="btn btn-danger btn-sm hod-reject-btn" data-id="{{ od.id }}"
+                                    data-url="{{ url_for('hod.reject', od_id=od.id) }}">
+                                ✗ Reject
+                            </button>
                             {% else %}
-                            <span style="font-size:0.78rem; color:var(--text-3);">Actioned</span>
-                            {% endif %}
-                            {% if od.verification_status == 'Pending Verification' %}
-                            <a href="{{ url_for('hod.verify_certificate', od_id=od.id) }}" class="btn btn-primary btn-sm">✔ Verify Cert</a>
+                            <span style="font-size:0.78rem;color:var(--text-3);">Actioned</span>
                             {% endif %}
                             {% if od.student.is_under_penalty %}
-                            <a href="{{ url_for('hod.remove_penalty', user_id=od.student.id) }}" class="btn btn-ghost btn-sm" style="color:var(--danger); border-color:var(--danger);">Remove Penalty</a>
+                            <a href="{{ url_for('hod.remove_penalty', user_id=od.student.id) }}" class="btn btn-ghost btn-sm" style="color:var(--danger);border-color:var(--danger);">Remove Penalty</a>
                             {% endif %}
                         </div>
                     </td>
@@ -187,4 +207,83 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+// ── Filter tabs ──────────────────────────────────────────────────────────────
+document.querySelectorAll('#hodFilterTabs .filter-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('#hodFilterTabs .filter-tab').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('#hodTable tbody tr').forEach(row => {
+            row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+        });
+    });
+});
+
+// ── AJAX approve/reject ──────────────────────────────────────────────────────
+function hodAction(odId, url, action) {
+    const actionsDiv = document.getElementById('hod-actions-' + odId);
+    const hodBadge   = document.getElementById('hod-badge-' + odId);
+    const finalBadge = document.getElementById('final-badge-hod-' + odId);
+    const row        = document.getElementById('hod-row-' + odId);
+
+    // Show spinner
+    actionsDiv.innerHTML = '<span style="font-size:0.8rem;color:var(--text-3);">Processing…</span>';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const hodStatus   = data.hod_status;
+            const finalStatus = data.final_status;
+
+            // Update badges
+            hodBadge.className   = 'badge badge-' + hodStatus.toLowerCase();
+            hodBadge.textContent = hodStatus;
+            finalBadge.className   = 'badge badge-' + finalStatus.toLowerCase();
+            finalBadge.textContent = finalStatus;
+
+            // Update row filter attr
+            row.dataset.status = hodStatus.toLowerCase();
+
+            // Replace actions with "Actioned"
+            actionsDiv.innerHTML = '<span style="font-size:0.78rem;color:var(--text-3);">Actioned</span>';
+
+            // Show toast
+            showToast(data.message, 'success');
+        } else {
+            actionsDiv.innerHTML = '<span style="color:var(--danger);font-size:0.8rem;">Error. <a href="">Refresh</a></span>';
+            showToast(data.message || 'Action failed.', 'error');
+        }
+    })
+    .catch(() => {
+        actionsDiv.innerHTML = '<span style="color:var(--danger);font-size:0.8rem;">Network error. <a href="">Refresh</a></span>';
+        showToast('Network error. Please try again.', 'error');
+    });
+}
+
+document.querySelectorAll('.hod-approve-btn').forEach(btn => {
+    btn.addEventListener('click', () => hodAction(btn.dataset.id, btn.dataset.url, 'approve'));
+});
+document.querySelectorAll('.hod-reject-btn').forEach(btn => {
+    btn.addEventListener('click', () => hodAction(btn.dataset.id, btn.dataset.url, 'reject'));
+});
+
+// ── Toast helper ─────────────────────────────────────────────────────────────
+function showToast(msg, type) {
+    const toast = document.createElement('div');
+    toast.className = 'flash ' + type;
+    toast.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;min-width:260px;animation:fadeIn 0.3s ease;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity 0.4s'; setTimeout(()=>toast.remove(),400); }, 4000);
+}
+</script>
 {% endblock %}
